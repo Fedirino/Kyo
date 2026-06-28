@@ -17,40 +17,215 @@
       --radius: 28px;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background:
-      radial-gradient(circle at 50% 28%, rgba(255,138,31,0.08), transparent 26%),
-      radial-gradient(circle at 50% 72%, rgba(255,138,31,0.05), transparent 22%),
-      linear-gradient(180deg, #060606 0%, #040404 100%);
-      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    html, body { margin: 0; height: 100%; color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: linear-gradient(180deg, #050505 0%, #040404 100%); }
     body { overflow: hidden; }
-    .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto auto; padding: max(24px,env(safe-area-inset-top)) 18px max(30px,env(safe-area-inset-bottom)); gap: 14px; max-width: 520px; margin: 0 auto; }
-    .topline { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
-    .pill { padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(20px); cursor: pointer; user-select: none; }
-    .pill[disabled] { opacity: .55; cursor: default; }
-    .hero { position: relative; display: grid; place-items: center; align-content: center; gap: 14px; }
-    .hero { position: relative; display: grid; place-items: center; align-content: center; gap: 18px; }
-    .avatar-wrap { position: relative; width: min(62vw, 280px); aspect-ratio: 1; display: grid; place-items: center; }
-    .avatar-glow { position: absolute; inset: 18%; border-radius: 50%; background: radial-gradient(circle, rgba(255,177,92,0.14), rgba(255,138,31,0.04) 42%, transparent 72%); filter: blur(12px); animation: breathe 4.5s ease-in-out infinite; }
-    .avatar { position: relative; width: 46%; height: 46%; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffca86 0%, #ff9d3f 18%, #ff7c12 52%, #7d2600 100%); box-shadow: var(--shadow); animation: pulse 2.8s ease-in-out infinite; }
-    .avatar.listening { animation: pulse 1.1s ease-in-out infinite; }
-    .avatar.thinking  { animation: spin 4s linear infinite, pulse 2.4s ease-in-out infinite; }
-    .avatar.speaking  { animation: pulse 0.55s ease-in-out infinite; }
-    .spike { position: absolute; left: 50%; top: 50%; width: 38%; height: 7px; transform-origin: 0 50%; }
-    .spike::before { content: ''; display: block; width: 100%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgba(255,196,126,0.95), rgba(255,138,31,0.95)); box-shadow: 0 0 18px rgba(255,138,31,0.4); opacity: 0.95; }
-    .spike:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg) translateX(112%); }
-    .spike:nth-child(2) { transform: translate(-50%, -50%) rotate(72deg) translateX(112%); }
-    .spike:nth-child(3) { transform: translate(-50%, -50%) rotate(144deg) translateX(112%); }
-    .spike:nth-child(4) { transform: translate(-50%, -50%) rotate(216deg) translateX(112%); }
-    .spike:nth-child(5) { transform: translate(-50%, -50%) rotate(288deg) translateX(112%); }
-    .status { min-height: 22px; color: var(--muted); font-size: 14px; text-align: center; letter-spacing: 0.04em; }
-    .transcript { min-height: 58px; max-height: 12vh; overflow-y: auto; padding: 12px 14px; border-radius: 18px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(16px); color: rgba(245,242,234,0.88); box-shadow: 0 10px 28px rgba(0,0,0,0.22); font-size: 14px; line-height: 1.4; }
-    .transcript .you  { color: rgba(245,242,234,0.55); font-size: 12px; margin-bottom: 4px; }
-    .transcript .kyo  { color: var(--text); }
-    .mic-shell { display: grid; place-items: center; padding-top: 4px; }
-    .mic { width: 86px; height: 86px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14); background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.25), rgba(255,138,31,0.16) 34%, rgba(255,138,31,0.85) 100%); box-shadow: 0 0 0 10px rgba(255,138,31,0.08), 0 0 50px rgba(255,138,31,0.35); display: grid; place-items: center; color: white; font-size: 30px; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.2s ease; }
+    body::before, body::after { content: ''; position: fixed; inset: 0; pointer-events: none; }
+    body::before {
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255,158,70,0.12), transparent 22%),
+        radial-gradient(circle at 50% 78%, rgba(255,138,31,0.06), transparent 22%),
+        linear-gradient(135deg, rgba(255,255,255,0.02) 0 20%, transparent 20% 40%, rgba(255,255,255,0.015) 40% 43%, transparent 43% 60%, rgba(255,255,255,0.02) 60% 62%, transparent 62% 100%);
+      opacity: 1;
+    }
+    body::after {
+      background:
+        linear-gradient(135deg, transparent 0 68%, rgba(255,255,255,0.02) 68% 70%, transparent 70% 100%),
+        radial-gradient(circle at 94% 92%, rgba(255,255,255,0.35), transparent 4px);
+      opacity: .7;
+    }
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom));
+      position: relative;
+    }
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: rgba(245,242,234,0.88);
+      font-size: 14px;
+      letter-spacing: 0.03em;
+    }
+    .pill {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(18px);
+      cursor: pointer;
+      user-select: none;
+    }
+    .brandmark {
+      align-self: center;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .brand-ring {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 35% 35%, rgba(255,196,126,0.34), rgba(255,138,31,0.12) 60%, rgba(255,138,31,0.04) 72%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,181,98,0.42);
+      box-shadow: 0 0 18px rgba(255,138,31,0.16), 0 0 60px rgba(255,138,31,0.08);
+    }
+    .brand-k {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: rgba(255,219,173,0.98);
+      text-shadow: 0 0 12px rgba(255,160,64,0.6);
+    }
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 6px;
+      flex: 1;
+      min-height: 0;
+      justify-content: center;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: rgba(255,242,229,0.95);
+    }
+    .wavebox {
+      position: relative;
+      height: 164px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,173,92,0.7);
+      background: linear-gradient(180deg, rgba(52,28,11,0.82), rgba(17,11,7,0.95));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 14px 34px rgba(0,0,0,0.42), 0 0 46px rgba(255,138,31,0.09);
+      overflow: hidden;
+    }
+    .wavebox::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 35%, rgba(255,177,92,0.16), transparent 40%), radial-gradient(circle at 30% 68%, rgba(255,138,31,0.08), transparent 30%);
+      pointer-events: none;
+    }
+    .avatar {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 22px;
+    }
+    .spike {
+      flex: 1 1 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,221,168,0.95), rgba(255,138,31,0.95));
+      box-shadow: 0 0 14px rgba(255,138,31,0.4);
+      opacity: 0.96;
+      transform-origin: center bottom;
+      animation: barPulse 1.6s ease-in-out infinite;
+    }
+    .spike:nth-child(1) { height: 22%; animation-delay: 0s; }
+    .spike:nth-child(2) { height: 44%; animation-delay: .1s; }
+    .spike:nth-child(3) { height: 70%; animation-delay: .2s; }
+    .spike:nth-child(4) { height: 44%; animation-delay: .3s; }
+    .spike:nth-child(5) { height: 22%; animation-delay: .4s; }
+    .avatar.listening .spike { animation-duration: .9s; }
+    .avatar.thinking .spike { animation-duration: 1.8s; }
+    .avatar.speaking .spike { animation-duration: .55s; }
+    .status { min-height: 20px; color: rgba(245,242,234,0.68); font-size: 12px; text-align: center; letter-spacing: 0.08em; text-transform: uppercase; }
+    .transcript {
+      min-height: 56px;
+      max-height: 80px;
+      overflow-y: auto;
+      padding: 10px 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(14px);
+      color: rgba(245,242,234,0.88);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .transcript .you  { color: rgba(245,242,234,0.52); font-size: 11px; margin-bottom: 4px; }
+    .transcript .kyo  { color: rgba(255,226,197,0.95); }
+    .ready {
+      text-align: center;
+      color: rgba(245,242,234,0.74);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      margin-top: 2px;
+    }
+    .mic-shell { display: grid; place-items: center; padding-top: 2px; }
+    .mic {
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,202,139,0.24);
+      background: radial-gradient(circle at 35% 32%, rgba(255,255,255,0.32), rgba(255,186,91,0.24) 28%, rgba(255,138,31,0.88) 68%, rgba(140,48,0,1) 100%);
+      box-shadow: 0 0 0 10px rgba(255,138,31,0.06), 0 0 50px rgba(255,138,31,0.35);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
     .mic:active { transform: scale(0.97); }
-    .mic.active { box-shadow: 0 0 0 16px rgba(255,138,31,0.18), 0 0 70px rgba(255,138,31,0.6); }
-    .footer { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+    .mic.active { box-shadow: 0 0 0 16px rgba(255,138,31,0.14), 0 0 70px rgba(255,138,31,0.58); }
+    .tap {
+      text-align: center;
+      color: rgba(245,242,234,0.62);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      margin-top: -2px;
+    }
+    .bottomnav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: end;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 4px;
+      color: rgba(245,242,234,0.56);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .bottomnav span { text-align: center; padding-bottom: 4px; position: relative; }
+    .bottomnav .active { color: rgba(255,244,230,0.95); }
+    .bottomnav .active::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 42px;
+      height: 2px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+    }
+    .footer { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    @keyframes barPulse { 0%,100% { transform: scaleY(0.85); } 50% { transform: scaleY(1.15); } }
+    @keyframes breathe { 0%,100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.03); opacity: 1; } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* Settings drawer */
     .scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); display: none; z-index: 10; }
@@ -73,27 +248,37 @@
 <body>
   <main class="app">
     <div class="topline">
-      <div class="pill" id="brand">Kyo</div>
+      <button class="brandmark" id="brand" aria-label="Kyo home">
+        <span class="brand-ring"><span class="brand-k">K</span></span>
+      </button>
       <div class="pill" id="settings-btn" title="Settings">⚙ Settings</div>
     </div>
 
-    <section class="hero" aria-label="Kyo assistant">
-      <div class="avatar-wrap">
-        <div class="avatar-glow"></div>
-        <div class="avatar" id="avatar">
+    <section class="panel" aria-label="Kyo assistant">
+      <div class="panel-head">
+        <div class="panel-title">Kyo Voice Assistant</div>
+      </div>
+      <div class="wavebox">
+        <div class="avatar" id="avatar" aria-hidden="true">
           <span class="spike"></span><span class="spike"></span><span class="spike"></span><span class="spike"></span><span class="spike"></span>
         </div>
+        <section class="transcript" id="transcript">
+          <div class="kyo">Kyo: How can I help you today?</div>
+        </section>
       </div>
-      <div class="status" id="status">Idle</div>
-    </section>
-
-    <section class="transcript" id="transcript">
-      <div class="kyo">Kyo is ready.</div>
+      <div class="status" id="status">READY TO START</div>
     </section>
 
     <section class="mic-shell">
       <button class="mic" id="mic" aria-label="Talk to Kyo">🎙</button>
     </section>
+    <div class="tap">TAP TO RECORD</div>
+
+    <nav class="bottomnav" aria-label="Primary">
+      <span class="active">HOME</span>
+      <span>RECORDINGS</span>
+      <span>SETTINGS</span>
+    </nav>
 
     <div class="footer">
       <span id="ver-tag">Kyo v0.2.0</span>
@@ -191,13 +376,29 @@
     }
     function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
     function appendTranscript(role, text) {
-      const div = document.createElement('div');
-      div.className = role;
-      div.textContent = (role === 'you' ? 'You: ' : 'Kyo: ') + text;
-      els.transcript.appendChild(div);
-      els.transcript.scrollTop = els.transcript.scrollHeight;
+      const parent = document.getElementById('transcript');
+      parent.innerHTML = ''; // match exactly: only show current exchange
+      
+      const kyoDiv = document.createElement('div');
+      kyoDiv.className = 'kyo';
+      if (role === 'you') {
+        kyoDiv.innerHTML = `<span style="color: #ff8a1f;">Kyo:</span> Speaking…`;
+        const youDiv = document.createElement('div');
+        youDiv.style.color = '#7c7c8c';
+        youDiv.style.fontSize = '12px';
+        youDiv.style.marginTop = '4px';
+        youDiv.textContent = `User: ${text}`;
+        parent.appendChild(kyoDiv);
+        parent.appendChild(youDiv);
+      } else {
+        kyoDiv.innerHTML = `<span style="color: #ff8a1f;">Kyo:</span> ${text}`;
+        parent.appendChild(kyoDiv);
+      }
     }
-    function clearGreeting(){ els.transcript.innerHTML = ''; }
+    function clearGreeting(){
+      const parent = document.getElementById('transcript');
+      parent.innerHTML = '';
+    }
 
     function openSettings() {
       els.apiKey.value = state.apiKey;
@@ -354,9 +555,7 @@
 
     // ---------- chat ----------
     async function handleUser(text) {
-      if (els.transcript.children.length === 1 && els.transcript.firstChild && els.transcript.firstChild.textContent.startsWith('Add your OpenRouter')) {
-        clearGreeting();
-      }
+      clearGreeting();
       appendTranscript('you', text);
       if (!state.apiKey) {
         appendTranscript('kyo', 'I need an OpenRouter key first. Open settings.');
