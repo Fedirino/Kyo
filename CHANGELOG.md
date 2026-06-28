@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+- Switched Kyo into Hillbilly Skeptic personality mode.
+- Added user context to the system prompt so Kyo knows Nick works in management in retail produce and prefers concise, direct help.
+- Tuned the default tone to be folksy, skeptical, and useful without becoming cartoonish.
+
 ## 0.2.1
 - Added proper home-screen icons and Apple touch icon assets.
 - Updated manifest and service worker cache to avoid stale installed PWA shells.
