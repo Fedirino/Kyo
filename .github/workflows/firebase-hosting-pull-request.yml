@@ -6,9 +6,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KYO_OS }}
-          channelId: preview
-          projectId: kyo-os
+      - name: Write Firebase service account
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/firebase-sa.json" <<'JSON'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KYO_OS }}
+          JSON
+      - name: Deploy preview to Firebase Hosting
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          output="$(npx firebase-tools@latest deploy --only hosting --project kyo-os --non-interactive --json 2>&1)" || rc=$?
+          rc="${rc:-0}"
+          printf '%s\n' "$output"
+          if [ "$rc" -ne 0 ]; then
+            if printf '%s' "$output" | grep -q "current active version"; then
+              echo "Hosting version already active; treating as success."
+              exit 0
+            fi
+            exit "$rc"
+          fi
