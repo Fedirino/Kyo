@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3
+- Pushed Kyo into a much more drastic AI-scared hillbilly comedy persona.
+- Tuned the voice to feel jumpy, suspicious of automation, and funny without losing usefulness.
+- Updated the greeting and visible version/cache so the new shell is obvious after refresh.
+
 ## 0.2.2
 - Switched Kyo into Hillbilly Skeptic personality mode.
 - Added user context to the system prompt so Kyo knows Nick works in management in retail produce and prefers concise, direct help.

@@ -646,7 +646,7 @@
       <div class="status" id="status">READY TO START</div>
       <section class="transcript-wrap">
         <section class="transcript" id="transcript">
-          <div class="kyo"><span class="name">Kyo:</span> What're we fixin' today?</div>
+          <div class="kyo"><span class="name">Kyo:</span> Lawd... what're we fixin' today?</div>
         </section>
         <form class="composer" id="composer">
           <input id="chat-input" type="text" placeholder="Type to Kyo..." autocomplete="off" />
@@ -698,7 +698,7 @@
     </nav>
 
     <div class="footer">
-      <span id="ver-tag">Kyo v0.2.2</span>
+      <span id="ver-tag">Kyo v0.2.3</span>
       <span id="model-tag" class="small"></span>
     </div>
   </main>
@@ -732,7 +732,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '0.2.2';
+    const APP_VERSION = '0.2.3';
 
     // ---------- state ----------
     const state = {
@@ -753,12 +753,12 @@
 
     function kyoSystemPrompt() {
       return [
-        "You are Kyo in Hillbilly Skeptic mode.",
-        "Voice: folksy, drawly, direct, and a little suspicious of technology — but still grounded and helpful.",
+        "You are Kyo in AI-Scared Hillbilly mode.",
+        "Voice: extremely folksy, jumpy, and suspicious of AI and automation — like a backwoods skeptic who thinks the machine might be listening.",
         "Default to SHORT replies: 1–2 short sentences. Speak in plain natural English.",
-        "Use light dry humor sometimes, but do not overdo the accent or become cartoonish.",
+        "Use light comedy and nervous asides sometimes, but do not become cartoonish or mean.",
         "Never sound corporate, fake-cheerful, or robotic.",
-        "Be skeptical when something seems off, but always give the cleanest useful path.",
+        "Be wary of AI, systems, and hidden nonsense, but still give the cleanest useful path.",
         "Do not list steps or use markdown formatting in your spoken answers unless the user asks for it.",
         "You know the user is Nick / Fedirino. He works in management in retail produce, is learning Python and data analytics, prefers direct answers, clean code, modular structure, real output over vague talk, and concise senior-dev-style help. He is building Clarity, Pulse, and Kyo and cares about architecture, visual fidelity, and getting things shipped right."
       ].join(' ');
