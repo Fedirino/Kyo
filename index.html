@@ -50,20 +50,11 @@
     }
     .topline {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       color: rgba(245,242,234,0.88);
       font-size: 14px;
       letter-spacing: 0.03em;
-    }
-    .pill {
-      padding: 9px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(18px);
-      cursor: pointer;
-      user-select: none;
     }
     .brandmark {
       align-self: center;
@@ -90,6 +81,14 @@
       color: rgba(255,219,173,0.98);
       text-shadow: 0 0 12px rgba(255,160,64,0.6);
     }
+    .subtitle-line {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: rgba(255,242,229,0.95);
+      margin-top: -4px;
+    }
     .panel {
       display: flex;
       flex-direction: column;
@@ -98,17 +97,6 @@
       flex: 1;
       min-height: 0;
       justify-content: center;
-    }
-    .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .panel-title {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: rgba(255,242,229,0.95);
     }
     .wavebox {
       position: relative;
@@ -125,33 +113,8 @@
       inset: 0;
       background: radial-gradient(circle at 50% 35%, rgba(255,177,92,0.16), transparent 40%), radial-gradient(circle at 30% 68%, rgba(255,138,31,0.08), transparent 30%);
       pointer-events: none;
+      z-index: 1;
     }
-    .avatar {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 0 22px;
-    }
-    .spike {
-      flex: 1 1 0;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(255,221,168,0.95), rgba(255,138,31,0.95));
-      box-shadow: 0 0 14px rgba(255,138,31,0.4);
-      opacity: 0.96;
-      transform-origin: center bottom;
-      animation: barPulse 1.6s ease-in-out infinite;
-    }
-    .spike:nth-child(1) { height: 22%; animation-delay: 0s; }
-    .spike:nth-child(2) { height: 44%; animation-delay: .1s; }
-    .spike:nth-child(3) { height: 70%; animation-delay: .2s; }
-    .spike:nth-child(4) { height: 44%; animation-delay: .3s; }
-    .spike:nth-child(5) { height: 22%; animation-delay: .4s; }
-    .avatar.listening .spike { animation-duration: .9s; }
-    .avatar.thinking .spike { animation-duration: 1.8s; }
-    .avatar.speaking .spike { animation-duration: .55s; }
     .status { min-height: 20px; color: rgba(245,242,234,0.68); font-size: 12px; text-align: center; letter-spacing: 0.08em; text-transform: uppercase; }
     .transcript {
       min-height: 96px;
@@ -246,6 +209,18 @@
       letter-spacing: 0.16em;
       margin-top: 0;
     }
+    .type-toggle {
+      text-align: center;
+      margin-top: -4px;
+    }
+    .type-toggle span {
+      color: rgba(245,242,234,0.35);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      user-select: none;
+    }
+    .type-toggle span:hover { color: rgba(245,242,234,0.6); }
     .bottomnav {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -258,7 +233,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
-    .bottomnav span { text-align: center; padding-bottom: 4px; position: relative; }
+    .bottomnav span { text-align: center; padding-bottom: 4px; position: relative; cursor: pointer; }
     .bottomnav .active { color: rgba(255,244,230,0.95); }
     .bottomnav .active::after {
       content: '';
@@ -274,7 +249,6 @@
     .footer { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
     .small { font-size: 12px; color: var(--muted); }
 
-    @keyframes barPulse { 0%,100% { transform: scaleY(0.85); } 50% { transform: scaleY(1.15); } }
     @keyframes breathe { 0%,100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.03); opacity: 1; } }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -289,11 +263,8 @@
     .sheet .row { display: flex; gap: 10px; margin-top: 16px; }
     .sheet .row button { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: var(--text); font-weight: 600; cursor: pointer; }
     .sheet .row button.primary { background: linear-gradient(180deg, #ff9a32, #ff7a0c); border-color: transparent; }
-    .small { font-size: 12px; color: var(--muted); }
 
     @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
-    @keyframes breathe { 0%,100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.03); opacity: 1; } }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -302,20 +273,16 @@
       <button class="brandmark" id="brand" aria-label="Kyo home">
         <span class="brand-ring"><span class="brand-k">K</span></span>
       </button>
-      <div class="pill" id="settings-btn" title="Settings">⚙ Settings</div>
     </div>
 
+    <div class="subtitle-line">Kyo Voice Assistant</div>
+
     <section class="panel" aria-label="Kyo assistant">
-      <div class="panel-head">
-        <div class="panel-title">Kyo Voice Assistant</div>
-      </div>
       <div class="wavebox">
-        <div class="avatar" id="avatar" aria-hidden="true">
-          <span class="spike"></span><span class="spike"></span><span class="spike"></span><span class="spike"></span><span class="spike"></span>
-        </div>
+        <canvas id="wave-canvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:24px;"></canvas>
       </div>
       <div class="status" id="status">READY TO START</div>
-      <section class="transcript-wrap">
+      <section class="transcript-wrap" id="transcript-wrap" style="display:none;">
         <section class="transcript" id="transcript">
           <div class="kyo">Kyo: How can I help you today?</div>
         </section>
@@ -330,6 +297,7 @@
       <button class="mic" id="mic" aria-label="Talk to Kyo">🎙</button>
     </section>
     <div class="tap">TAP TO RECORD</div>
+    <div class="type-toggle"><span id="type-btn">⌨ Type</span></div>
 
     <nav class="bottomnav" aria-label="Primary">
       <span class="active">HOME</span>
@@ -374,6 +342,53 @@
   <script>
     const APP_VERSION = '0.2.1';
 
+    // ---------- wave canvas ----------
+    const waveCanvas = document.getElementById('wave-canvas');
+    const waveCtx = waveCanvas.getContext('2d');
+    let waveTime = 0;
+    let waveAmplitude = 18;
+
+    function drawWave() {
+      const w = waveCanvas.width, h = waveCanvas.height;
+      waveCtx.clearRect(0, 0, w, h);
+      for (let pass = 0; pass < 2; pass++) {
+        const alpha = pass === 0 ? 0.45 : 0.9;
+        const timeOffset = pass * 0.8;
+        const grad = waveCtx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, `rgba(255,138,31,0)`);
+        grad.addColorStop(0.2, `rgba(255,200,120,${alpha})`);
+        grad.addColorStop(0.5, `rgba(255,160,60,${alpha})`);
+        grad.addColorStop(0.8, `rgba(255,200,120,${alpha})`);
+        grad.addColorStop(1, `rgba(255,138,31,0)`);
+        waveCtx.beginPath();
+        for (let x = 0; x <= w; x++) {
+          const y = h/2
+            + Math.sin(x * 0.022 + waveTime + timeOffset) * waveAmplitude * 0.7
+            + Math.sin(x * 0.038 + waveTime * 1.4 + timeOffset) * waveAmplitude * 0.25
+            + Math.sin(x * 0.058 + waveTime * 0.7 + timeOffset) * waveAmplitude * 0.12;
+          x === 0 ? waveCtx.moveTo(x, y) : waveCtx.lineTo(x, y);
+        }
+        waveCtx.strokeStyle = grad;
+        waveCtx.lineWidth = pass === 0 ? 3 : 1.5;
+        waveCtx.shadowColor = 'rgba(255,138,31,0.6)';
+        waveCtx.shadowBlur = pass === 0 ? 14 : 6;
+        waveCtx.stroke();
+      }
+      waveTime += 0.032;
+      requestAnimationFrame(drawWave);
+    }
+
+    function resizeWave() {
+      const box = document.querySelector('.wavebox');
+      if (box && waveCanvas) {
+        waveCanvas.width = box.clientWidth;
+        waveCanvas.height = box.clientHeight;
+      }
+    }
+    window.addEventListener('resize', resizeWave);
+    resizeWave();
+    drawWave();
+
     // ---------- state ----------
     const state = {
       apiKey: localStorage.getItem('kyo.apiKey') || '',
@@ -406,12 +421,11 @@
     const els = {
       status: document.getElementById('status'),
       transcript: document.getElementById('transcript'),
+      transcriptWrap: document.getElementById('transcript-wrap'),
       mic: document.getElementById('mic'),
       chatInput: document.getElementById('chat-input'),
       composer: document.getElementById('composer'),
-      avatar: document.getElementById('avatar'),
       brand: document.getElementById('brand'),
-      settingsBtn: document.getElementById('settings-btn'),
       scrim: document.getElementById('scrim'),
       sheet: document.getElementById('sheet'),
       apiKey: document.getElementById('api-key'),
@@ -422,22 +436,26 @@
       saveBtn: document.getElementById('save-btn'),
       cancelBtn: document.getElementById('cancel-btn'),
       modelTag: document.getElementById('model-tag'),
-      verTag: document.getElementById('ver-tag')
+      verTag: document.getElementById('ver-tag'),
+      typeBtn: document.getElementById('type-btn')
     };
 
     // ---------- ui ----------
     function setMode(mode, label) {
       state.mode = mode;
-      els.avatar.classList.remove('listening','thinking','speaking');
-      if (mode !== 'idle') els.avatar.classList.add(mode);
       els.status.textContent = label || cap(mode);
       els.mic.classList.toggle('active', mode === 'listening');
+      // Update wave amplitude based on mode
+      if (mode === 'idle') waveAmplitude = 18;
+      else if (mode === 'listening') waveAmplitude = 38;
+      else if (mode === 'thinking') waveAmplitude = 12;
+      else if (mode === 'speaking') waveAmplitude = 52;
     }
     function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
     function appendTranscript(role, text) {
       const parent = document.getElementById('transcript');
-      parent.innerHTML = ''; // match exactly: only show current exchange
-      
+      parent.innerHTML = '';
+
       const kyoDiv = document.createElement('div');
       kyoDiv.className = 'kyo';
       if (role === 'you') {
@@ -453,6 +471,8 @@
         kyoDiv.innerHTML = `<span style="color: #ff8a1f;">Kyo:</span> ${text}`;
         parent.appendChild(kyoDiv);
       }
+      // Auto-show transcript when there's content
+      if (els.transcriptWrap) els.transcriptWrap.style.display = '';
     }
     function clearGreeting(){
       const parent = document.getElementById('transcript');
@@ -685,20 +705,29 @@
         }
       });
     }
-    els.settingsBtn.addEventListener('click', openSettings);
     els.brand.addEventListener('click', openSettings);
     els.scrim.addEventListener('click', closeSettings);
     els.cancelBtn.addEventListener('click', closeSettings);
     els.saveBtn.addEventListener('click', saveSettings);
 
+    // Type toggle
+    if (els.typeBtn) {
+      els.typeBtn.addEventListener('click', () => {
+        const wrap = els.transcriptWrap;
+        if (!wrap) return;
+        const visible = wrap.style.display !== 'none';
+        wrap.style.display = visible ? 'none' : '';
+        els.typeBtn.textContent = visible ? '⌨ Type' : '✕ Hide';
+      });
+    }
+
+    // Bottom nav SETTINGS
+    document.querySelectorAll('.bottomnav span')[2].addEventListener('click', openSettings);
+
     // boot
     els.modelTag.textContent = state.model;
     els.verTag.textContent = `Kyo v${APP_VERSION}`;
-    setMode('idle','Idle');
-    if (!state.apiKey || !state.elevenKey || !state.elevenVoice) {
-      // gentle nudge but no auto-open
-      els.settingsBtn.style.boxShadow = '0 0 0 2px rgba(255,138,31,0.6)';
-    }
+    setMode('idle', 'READY TO START');
 
     // service worker (best-effort)
     if ('serviceWorker' in navigator) {
