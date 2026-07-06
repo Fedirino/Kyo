@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — 8C: EMBER INSTRUMENT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --amber: #ff8c42;
+    --amber-hot: #ffc9a3;
+    --amber-deep: #e05c1a;
+    --ink: #f5efe9;
+    --dim: rgba(245,239,233,0.45);
+    --hair: rgba(255,140,66,0.14);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; color: var(--ink); font-family: var(--display);
+    background: linear-gradient(180deg, #131114 0%, #0e0d10 45%, #0a090b 100%); }
+  body { overflow: hidden; }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: 0.14;
+    background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,0.9) 3px 4px); }
+
+  .app { height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 0;
+    padding: max(16px, env(safe-area-inset-top)) 20px max(14px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1; }
+
+  .brand { position: relative; width: 74px; height: 33px; }
+  .brand span { position: absolute; inset: 0; font-weight: 700; font-size: 28px; line-height: 33px;
+    transform: translateX(var(--gx)); animation: gsh 4.5s steps(1, end) infinite; pointer-events: none;
+    filter: drop-shadow(0 0 10px rgba(255,140,66,0.35)); }
+  .brand .g1 { color: #ffe6d2; clip-path: inset(0 0 83% 0);   --gx: -2.5px; }
+  .brand .g2 { color: #ffc9a3; clip-path: inset(17% 0 66% 0); --gx: -1.5px; }
+  .brand .g3 { color: #ff8c42; clip-path: inset(34% 0 50% 0); --gx: 1.5px; }
+  .brand .g4 { color: #ff8c42; clip-path: inset(50% 0 33% 0); --gx: -2px; }
+  .brand .g5 { color: #e05c1a; clip-path: inset(66% 0 17% 0); --gx: 2px; }
+  .brand .g6 { color: #b8430f; clip-path: inset(83% 0 0 0);   --gx: -1px; }
+  @keyframes gsh {
+    0%, 92%, 100% { transform: translateX(var(--gx)); }
+    94% { transform: translateX(calc(var(--gx) + 3px)); }
+    96% { transform: translateX(calc(var(--gx) - 3px)); }
+    98% { transform: translateX(var(--gx)); }
+  }
+
+  .topline { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; }
+  .tele { font-family: var(--mono); font-size: 9px; text-align: right; color: var(--dim); line-height: 1.75; letter-spacing: 0.16em; }
+  .tele b { color: var(--amber); font-weight: 500; }
+
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--hair) 20%, var(--hair) 80%, transparent); }
+
+  .stage { position: relative; height: 250px; display: grid; place-items: center; margin: 6px 0 2px; }
+  .brk { position: absolute; width: 18px; height: 18px; border: 1px solid rgba(255,140,66,0.3); }
+  .brk.tl { top: 8px; left: 2px; border-right: 0; border-bottom: 0; }
+  .brk.tr { top: 8px; right: 2px; border-left: 0; border-bottom: 0; }
+  .brk.bl { bottom: 8px; left: 2px; border-right: 0; border-top: 0; }
+  .brk.br { bottom: 8px; right: 2px; border-left: 0; border-top: 0; }
+  .axis { position: absolute; font-family: var(--mono); font-size: 8px; letter-spacing: 0.3em; color: rgba(245,239,233,0.22); }
+  .axis.a { top: 12px; left: 30px; } .axis.b { bottom: 12px; right: 30px; }
+  .hudarc { position: absolute; width: 246px; height: 246px; animation: hud 30s linear infinite; }
+  @keyframes hud { to { rotate: 360deg; } }
+  canvas#core { width: 290px; height: 240px; display: block; }
+
+  .statusrow { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px 10px; }
+  .statusword { font-family: var(--mono); font-size: 10px; letter-spacing: 0.4em; color: var(--amber-hot); text-transform: uppercase; }
+  .statusword::before { content: '▸ '; color: var(--amber); }
+  .sig { display: flex; gap: 3px; align-items: flex-end; height: 12px; }
+  .sig i { width: 3px; border-radius: 1px; background: rgba(255,140,66,0.35); }
+  [data-state="listening"] .sig i, [data-state="speaking"] .sig i { background: var(--amber); animation: sig 0.55s ease-in-out infinite; }
+  @keyframes sig { 0%,100% { transform: scaleY(0.5); } 50% { transform: scaleY(1.2); } }
+
+  .feed { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .row { padding: 9px 2px; border-bottom: 1px solid rgba(255,140,66,0.07); }
+  .row .who { font-family: var(--mono); font-size: 8px; letter-spacing: 0.34em; color: var(--dim); margin-bottom: 4px; }
+  .row.kyo .who { color: var(--amber); }
+  .row .tx { font-size: 14.5px; line-height: 1.5; font-weight: 300; color: var(--ink); }
+  .row.you .tx { color: rgba(245,239,233,0.6); font-size: 13.5px; }
+  .typing .tx::after { content: '▏'; color: var(--amber); animation: cb 0.8s steps(1) infinite; }
+  @keyframes cb { 0%,55% { opacity: 1; } 56%,100% { opacity: 0; } }
+
+  .composer { display: flex; gap: 10px; align-items: center; padding: 12px 2px 10px; }
+  .composer .pfx { font-family: var(--mono); color: var(--amber); font-size: 15px; }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+    color: var(--ink); font-family: var(--display); font-size: 14.5px; font-weight: 300; caret-color: var(--amber); }
+  .composer input::placeholder { color: rgba(245,239,233,0.28); }
+  .composer button { background: transparent; border: 1px solid rgba(255,140,66,0.3); color: var(--amber);
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.24em; padding: 6px 13px; cursor: pointer; border-radius: 3px; transition: all .2s; }
+  .composer button:hover { background: rgba(255,140,66,0.10); color: var(--amber-hot); }
+
+  .microw { display: flex; align-items: center; justify-content: center; gap: 17px; padding: 8px 0 2px; }
+  .ticks { display: flex; gap: 3px; align-items: center; }
+  .ticks i { width: 2.5px; border-radius: 2px; background: var(--amber); opacity: 0.35; transition: opacity .3s; }
+  [data-state="listening"] .ticks i, [data-state="speaking"] .ticks i { opacity: 0.95; animation: tick 0.6s ease-in-out infinite; }
+  [data-state="listening"] .ticks i { animation-duration: 1s; }
+  @keyframes tick { 0%,100% { transform: scaleY(0.55); } 50% { transform: scaleY(1.25); } }
+
+  .mic { position: relative; width: 72px; height: 72px; border-radius: 22px; border: 0; cursor: pointer; color: #fff;
+    background: radial-gradient(circle at 38% 28%, #ffdcbc 0%, #ffa25c 32%, #ee6d22 62%, #a83d0d 100%);
+    box-shadow:
+      0 0 0 1px rgba(255,201,163,0.5),
+      0 10px 28px rgba(224,92,26,0.42), 0 0 44px rgba(255,140,66,0.3),
+      inset 0 -8px 15px rgba(120,40,4,0.5), inset 0 6px 10px rgba(255,255,255,0.35);
+    display: grid; place-items: center; transition: transform .15s; }
+  .mic svg { width: 27px; height: 27px; filter: drop-shadow(0 1px 3px rgba(90,30,0,0.5)); }
+  .mic:active { transform: scale(0.94); }
+  .mic::before { content: ''; position: absolute; inset: -9px; border-radius: 28px;
+    border: 1px solid rgba(255,140,66,0.28); }
+  [data-state="listening"] .mic::before { animation: ping 1.4s ease-out infinite; }
+  @keyframes ping { 0% { transform: scale(0.95); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding: 10px 0 8px; }
+  .chips button { background: transparent; border: 1px solid rgba(255,140,66,0.16); border-radius: 3px; color: var(--dim);
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; padding: 5px 10px; cursor: pointer; text-transform: uppercase; }
+  .chips button:hover, .chips button.on { border-color: var(--amber); color: var(--amber-hot); background: rgba(255,140,66,0.08); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.2em; color: rgba(245,239,233,0.22); padding-top: 8px; }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <div class="brand" aria-label="Kyo">
+        <span class="g1">Kyo</span><span class="g2">Kyo</span><span class="g3">Kyo</span>
+        <span class="g4">Kyo</span><span class="g5">Kyo</span><span class="g6">Kyo</span>
+      </div>
+      <div class="tele">CORE <b id="pwr">98.1%</b> · THERM <b>34°</b><br/>LINK <b>HERMES</b> <span id="linkst">:: STANDBY</span></div>
+    </div>
+    <div class="divider"></div>
+
+    <section class="stage" aria-label="Kyo ember core">
+      <span class="brk tl"></span><span class="brk tr"></span><span class="brk bl"></span><span class="brk br"></span>
+      <span class="axis a">SIG//KYO</span>
+      <span class="axis b">EMBER-08C</span>
+      <svg class="hudarc" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="48.5" fill="none" stroke="rgba(255,140,66,0.30)" stroke-width="0.6" stroke-dasharray="1 5.1"/>
+      </svg>
+      <canvas id="core" width="580" height="480"></canvas>
+    </section>
+
+    <div class="statusrow">
+      <div class="statusword" id="status">STANDBY</div>
+      <div class="sig" aria-hidden="true">
+        <i style="height:5px"></i><i style="height:9px;animation-delay:.07s"></i><i style="height:12px;animation-delay:.14s"></i><i style="height:7px;animation-delay:.04s"></i><i style="height:10px;animation-delay:.11s"></i>
+      </div>
+    </div>
+    <div class="divider"></div>
+
+    <section class="feed" id="feed">
+      <div class="row kyo"><div class="who">KYO</div><div class="tx">Good evening, Nick. How can I help?</div></div>
+    </section>
+
+    <div class="divider"></div>
+    <form class="composer" id="composer">
+      <span class="pfx">&gt;</span>
+      <input id="in" type="text" placeholder="enter input" autocomplete="off" />
+      <button type="submit">SEND</button>
+    </form>
+
+    <div class="microw">
+      <div class="ticks" aria-hidden="true">
+        <i style="height:7px"></i><i style="height:13px;animation-delay:.08s"></i><i style="height:9px;animation-delay:.16s"></i><i style="height:17px;animation-delay:.04s"></i><i style="height:11px;animation-delay:.12s"></i><i style="height:19px;animation-delay:.2s"></i><i style="height:8px;animation-delay:.06s"></i>
+      </div>
+      <button class="mic" id="mic" aria-label="Talk to Kyo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ticks" aria-hidden="true">
+        <i style="height:9px;animation-delay:.1s"></i><i style="height:18px;animation-delay:.02s"></i><i style="height:8px;animation-delay:.18s"></i><i style="height:14px;animation-delay:.07s"></i><i style="height:10px;animation-delay:.14s"></i><i style="height:16px;animation-delay:.05s"></i><i style="height:7px;animation-delay:.11s"></i>
+      </div>
+    </div>
+
+    <div class="chips" aria-label="Demo states">
+      <button data-s="idle" class="on">Idle</button>
+      <button data-s="listening">Listen</button>
+      <button data-s="thinking">Think</button>
+      <button data-s="speaking">Speak</button>
+      <button id="demo">▶ Demo</button>
+    </div>
+
+    <div class="foot"><span>KYO v0.2.3 — 8C «EMBER INSTRUMENT»</span><span>PRECISION HEAT</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  const linkst = document.getElementById('linkst');
+  let speakAmp = 0;
+
+  const LABEL = { idle:'STANDBY', listening:'LISTENING', thinking:'PROCESSING', speaking:'SPEAKING' };
+  function setState(s){
+    body.dataset.state = s;
+    status.textContent = LABEL[s];
+    linkst.textContent = s === 'idle' ? ':: STANDBY' : ':: LIVE';
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+  setInterval(() => {
+    document.getElementById('pwr').textContent = (97.2 + Math.random()*2.1).toFixed(1) + '%';
+  }, 1600);
+
+  const cv = document.getElementById('core');
+  const cx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+  const N = 230, P = [];
+  for (let i = 0; i < N; i++) {
+    P.push({
+      ang: Math.random()*Math.PI*2,
+      baseR: 90 + (Math.random()-0.5)*20,
+      len: Math.random() < 0.3 ? 42 + Math.random()*90 : 7 + Math.random()*28,
+      tw: 1.5 + Math.random()*3.5,
+      ph: Math.random()*Math.PI*2
+    });
+  }
+  let time = 0, rot = 0;
+  function frame(){
+    time += 0.016; speakAmp *= 0.90;
+    const s = body.dataset.state;
+    rot += s === 'listening' ? 0.0032 : s === 'thinking' ? 0.010 : 0.0012;
+    let S = 0.42;
+    if (s === 'listening') S = 1.0;
+    else if (s === 'thinking') S = 0.24;
+    else if (s === 'speaking') S = 0.5 + Math.min(speakAmp, 34)/40;
+
+    cx.clearRect(0, 0, W, H);
+    const g = cx.createRadialGradient(CX, CY, 20, CX, CY, 112);
+    g.addColorStop(0, 'rgba(255,140,66,0.10)');
+    g.addColorStop(1, 'rgba(255,140,66,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(CX, CY, 112, 0, 6.29); cx.fill();
+
+    for (const p of P) {
+      const a = p.ang + rot + (s === 'thinking' ? Math.sin(time*2 + p.ph)*0.06 : 0);
+      const tw = 0.62 + 0.38*Math.sin(time*p.tw + p.ph);
+      const spike = p.len * S * tw + 3;
+      const r0 = p.baseR * (s === 'thinking' ? 0.82 : 1) * (s === 'speaking' ? 1 + Math.sin(time*9)*0.03 : 1);
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const x0 = CX + ca*r0, y0 = CY + sa*r0*0.96;
+      const x1 = CX + ca*(r0 + spike), y1 = CY + sa*(r0 + spike)*0.96;
+      cx.strokeStyle = 'rgba(224,92,26,' + (0.30 + 0.34*tw).toFixed(3) + ')';
+      cx.lineWidth = 1.6;
+      cx.beginPath(); cx.moveTo(x0, y0); cx.lineTo(x1, y1); cx.stroke();
+      cx.fillStyle = 'rgba(255,201,163,' + (0.5 + 0.5*tw).toFixed(3) + ')';
+      cx.beginPath(); cx.arc(x0, y0, 1.8, 0, 6.29); cx.fill();
+      cx.fillStyle = 'rgba(255,140,66,' + (0.35 + 0.45*tw).toFixed(3) + ')';
+      cx.beginPath(); cx.arc(x1, y1, 1.2, 0, 6.29); cx.fill();
+    }
+    cx.strokeStyle = 'rgba(255,201,163,0.30)';
+    cx.lineWidth = 1;
+    cx.beginPath(); cx.arc(CX, CY, 81, 0, 6.29); cx.stroke();
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  function addRow(cls, who, text){
+    const d = document.createElement('div');
+    d.className = 'row ' + cls;
+    d.innerHTML = '<div class="who">' + who + '</div><div class="tx"></div>';
+    d.querySelector('.tx').textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    const tx = el.querySelector('.tx'); let i = 0; el.classList.add('typing');
+    (function tick(){
+      if (i < text.length) { tx.textContent += text[i++]; speakAmp = 16 + Math.random()*22; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 20 + Math.random()*28); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "On it — one moment.",
+    "Done. Anything else I can take care of?",
+    "Understood. I'll route that through Hermes once we're linked.",
+    "All set. I'm here when you need me."
+  ];
+  let ri = 0;
+  function converse(userText){
+    addRow('you', 'YOU', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const m = addRow('kyo', 'KYO', '');
+      typeOut(m, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1600);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) Hey Kyo, status.'), 1900);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) Kyo, run a demo.'), 1600);
+  });
+</script>
+</body>
+</html>

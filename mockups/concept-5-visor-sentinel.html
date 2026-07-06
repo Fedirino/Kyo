@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — Concept 5: VISOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #06090d;
+    --ice: #7df3ff;
+    --ice-hot: #eaffff;
+    --ice-dim: rgba(125,243,255,0.5);
+    --ice-faint: rgba(125,243,255,0.10);
+    --plate: #12181f;
+    --plate-hi: #1d2733;
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; color: #dcecf2; font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 12%, #0b1420 0%, #070c12 45%, #030507 100%); }
+  body { overflow: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, transparent 0 79px, rgba(125,243,255,0.03) 79px 80px); }
+
+  .app { height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: max(16px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1; }
+
+  .topline { display: flex; justify-content: space-between; align-items: baseline; }
+  .brand { font-weight: 600; font-size: 17px; letter-spacing: 0.3em; color: var(--ice-hot); text-shadow: 0 0 16px rgba(125,243,255,0.6); }
+  .brand small { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.32em; color: var(--ice-dim); margin-top: 3px; }
+  .tele { font-family: var(--mono); font-size: 9.5px; text-align: right; color: var(--ice-dim); line-height: 1.7; letter-spacing: 0.14em; }
+  .tele b { color: var(--ice); font-weight: 500; }
+
+  /* ===== KYO = SENTINEL VISOR ===== */
+  .stage { position: relative; height: 220px; display: grid; place-items: center; }
+  .head { position: relative; width: 216px; height: 128px; }
+  .helm {
+    position: absolute; inset: 0; border-radius: 34px;
+    background: linear-gradient(165deg, var(--plate-hi) 0%, var(--plate) 55%, #0b0f14 100%);
+    border: 1.5px solid #2a3644;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(234,255,255,0.10), 0 0 40px rgba(125,243,255,0.08);
+  }
+  .helm::before { content: ''; position: absolute; left: 24px; right: 24px; top: 9px; height: 1px; background: linear-gradient(90deg, transparent, rgba(125,243,255,0.35), transparent); }
+  .pod { position: absolute; top: 38px; width: 10px; height: 52px; border-radius: 6px; background: #1a222c; border: 1px solid #2a3644; transition: all .3s; }
+  .pod.l { left: -14px; } .pod.r { right: -14px; }
+  [data-state="listening"] .pod { background: var(--ice); box-shadow: 0 0 18px rgba(125,243,255,0.8); border-color: var(--ice-hot); }
+
+  .visor {
+    position: absolute; inset: 18px 20px; border-radius: 22px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, #050b12 0%, #02060b 80%);
+    border: 1px solid rgba(125,243,255,0.22);
+    box-shadow: inset 0 0 26px rgba(0,0,0,0.85), inset 0 0 18px rgba(125,243,255,0.06);
+    display: grid; place-items: center;
+  }
+  .visor::after { content: ''; position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 35%, rgba(234,255,255,0.07) 48%, transparent 60%);
+    background-size: 280% 100%; animation: sheen 6s ease-in-out infinite; }
+  @keyframes sheen { 0%, 55%, 100% { background-position: 130% 0; } 25% { background-position: -60% 0; } }
+
+  .eye {
+    width: 70px; height: 18px; border-radius: 999px;
+    background: linear-gradient(180deg, var(--ice-hot), var(--ice) 70%);
+    box-shadow: 0 0 18px rgba(125,243,255,0.95), 0 0 48px rgba(125,243,255,0.45);
+    transition: width .35s ease, height .35s ease, opacity .3s;
+    animation: blink 5.2s infinite, drift 8s ease-in-out infinite;
+  }
+  @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5%, 97% { transform: scaleY(0.05); } }
+  @keyframes drift { 0%, 100% { translate: 0 0; } 30% { translate: 14px 0; } 65% { translate: -14px 0; } }
+  [data-state="listening"] .eye { width: 30px; height: 30px; animation: none; }
+  [data-state="thinking"] .eye { width: 88px; height: 5px; animation: scan 1.1s ease-in-out infinite; }
+  @keyframes scan { 0%, 100% { translate: -34px 0; } 50% { translate: 34px 0; } }
+  [data-state="speaking"] .eye { opacity: 0.12; animation: none; }
+
+  .ring { position: absolute; width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(125,243,255,0.8); opacity: 0; }
+  [data-state="listening"] .ring { animation: ping 1.4s ease-out infinite; }
+  @keyframes ping { 0% { transform: scale(0.7); opacity: 0.9; } 100% { transform: scale(1.9); opacity: 0; } }
+
+  .voxeq { position: absolute; display: flex; gap: 5px; align-items: center; height: 40px; opacity: 0; transition: opacity .25s; }
+  .voxeq i { width: 6px; height: 5px; border-radius: 3px; background: linear-gradient(180deg, var(--ice-hot), var(--ice));
+    box-shadow: 0 0 12px rgba(125,243,255,0.8); }
+  [data-state="speaking"] .voxeq { opacity: 1; }
+  [data-state="speaking"] .voxeq i { animation: eq 0.44s ease-in-out infinite; }
+  [data-state="speaking"] .voxeq i:nth-child(2) { animation-delay: .09s; }
+  [data-state="speaking"] .voxeq i:nth-child(3) { animation-delay: .04s; }
+  [data-state="speaking"] .voxeq i:nth-child(4) { animation-delay: .13s; }
+  [data-state="speaking"] .voxeq i:nth-child(5) { animation-delay: .07s; }
+  [data-state="speaking"] .voxeq i:nth-child(6) { animation-delay: .11s; }
+  [data-state="speaking"] .voxeq i:nth-child(7) { animation-delay: .02s; }
+  @keyframes eq { 0%, 100% { height: 5px; } 50% { height: 30px; } }
+
+  .chin { position: absolute; bottom: -14px; left: 50%; translate: -50% 0; display: flex; gap: 6px; }
+  .chin i { width: 16px; height: 3px; border-radius: 2px; background: #223040; transition: background .3s, box-shadow .3s; }
+  [data-state="thinking"] .chin i { animation: chinSeq 0.9s linear infinite; }
+  [data-state="thinking"] .chin i:nth-child(2) { animation-delay: .3s; }
+  [data-state="thinking"] .chin i:nth-child(3) { animation-delay: .6s; }
+  @keyframes chinSeq { 0%, 100% { background: #223040; box-shadow: none; } 50% { background: var(--ice); box-shadow: 0 0 10px rgba(125,243,255,0.8); } }
+
+  .statusword { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.42em; color: var(--ice-dim); text-transform: uppercase; }
+
+  .feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .msg { max-width: 86%; padding: 10px 14px; font-size: 14.5px; line-height: 1.5; border-radius: 8px; }
+  .msg.kyo { align-self: flex-start; color: var(--ice-hot); background: rgba(125,243,255,0.06);
+    border: 1px solid rgba(125,243,255,0.28); border-left: 3px solid var(--ice); }
+  .msg.kyo b { display: block; font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: 0.3em; color: var(--ice-dim); margin-bottom: 4px; }
+  .msg.you { align-self: flex-end; color: rgba(220,236,242,0.78); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+  .typing::after { content: '▎'; color: var(--ice); animation: cblink 0.8s steps(1) infinite; }
+  @keyframes cblink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+  .composer { display: flex; gap: 8px; align-items: center; padding: 12px 15px; border-radius: 14px;
+    background: rgba(10,16,23,0.8); border: 1px solid rgba(125,243,255,0.3); backdrop-filter: blur(10px); }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+    color: var(--ice-hot); font-family: var(--display); font-size: 15px; caret-color: var(--ice); }
+  .composer input::placeholder { color: rgba(125,243,255,0.32); }
+  .composer button { border: 0; border-radius: 9px; padding: 8px 15px; cursor: pointer;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.2em; color: #041318;
+    background: linear-gradient(135deg, var(--ice-hot), var(--ice) 65%, #2fa8c2); }
+
+  .micline { display: grid; place-items: center; padding-top: 4px; }
+  .mic { width: 82px; height: 82px; border-radius: 26px; cursor: pointer; color: var(--ice);
+    background: linear-gradient(165deg, var(--plate-hi), var(--plate)); border: 1.5px solid #2a3644;
+    display: grid; place-items: center; transition: all .25s; box-shadow: 0 10px 26px rgba(0,0,0,0.5); }
+  .mic svg { width: 30px; height: 30px; filter: drop-shadow(0 0 8px rgba(125,243,255,0.6)); }
+  .mic:active { transform: scale(0.95); }
+  [data-state="listening"] .mic { color: #041318; border-color: var(--ice-hot);
+    background: linear-gradient(135deg, var(--ice-hot), var(--ice) 60%, #2fa8c2);
+    box-shadow: 0 0 52px rgba(125,243,255,0.5); }
+  .miclabel { text-align: center; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.32em; color: var(--ice-dim); margin-top: 8px; text-transform: uppercase; }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding-top: 6px; }
+  .chips button { background: transparent; border: 1px solid var(--ice-faint); border-radius: 8px; color: var(--ice-dim);
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; padding: 6px 11px; cursor: pointer; text-transform: uppercase; }
+  .chips button:hover, .chips button.on { border-color: var(--ice); color: var(--ice-hot); background: var(--ice-faint); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9.5px;
+    letter-spacing: 0.2em; color: rgba(220,236,242,0.35); border-top: 1px solid rgba(125,243,255,0.12); padding-top: 8px; }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <div class="brand">KYO<small>SENTINEL-CLASS INTERFACE</small></div>
+      <div class="tele">SYS <b>NOMINAL</b> · UPTIME <b id="up">00:00</b><br/>LINK <b>HERMES</b> <span id="linkst">:: STANDBY</span></div>
+    </div>
+
+    <section class="stage" aria-label="Kyo sentinel visor">
+      <div class="head">
+        <div class="pod l"></div><div class="pod r"></div>
+        <div class="helm"></div>
+        <div class="visor">
+          <div class="ring"></div>
+          <div class="eye"></div>
+          <div class="voxeq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="chin"><i></i><i></i><i></i></div>
+      </div>
+    </section>
+    <div class="statusword" id="status">STANDBY</div>
+
+    <section class="feed" id="feed">
+      <div class="msg kyo"><b>KYO</b>Kyo online. State your request.</div>
+    </section>
+
+    <form class="composer" id="composer">
+      <input id="in" type="text" placeholder="Enter directive…" autocomplete="off" />
+      <button type="submit">SEND</button>
+    </form>
+
+    <div class="micline">
+      <button class="mic" id="mic" aria-label="Talk to Kyo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="miclabel" id="miclabel">Open voice channel</div>
+
+    <div class="chips" aria-label="Demo states">
+      <button data-s="idle" class="on">Idle</button>
+      <button data-s="listening">Listen</button>
+      <button data-s="thinking">Think</button>
+      <button data-s="speaking">Speak</button>
+      <button id="demo">▶ Demo</button>
+    </div>
+
+    <div class="foot"><span>KYO v0.2.3 — CONCEPT 5 «VISOR»</span><span>SENTINEL</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  const miclabel = document.getElementById('miclabel');
+  const linkst = document.getElementById('linkst');
+
+  const LABEL = { idle:'STANDBY', listening:'RECEIVING AUDIO', thinking:'PROCESSING', speaking:'VOICE OUTPUT' };
+  const MICL  = { idle:'Open voice channel', listening:'Channel open — tap to close', thinking:'Processing…', speaking:'Responding…' };
+  function setState(s){
+    body.dataset.state = s;
+    status.textContent = LABEL[s];
+    miclabel.textContent = MICL[s];
+    linkst.textContent = s === 'idle' ? ':: STANDBY' : ':: ACTIVE';
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+
+  const t0 = Date.now();
+  setInterval(() => {
+    const s = Math.floor((Date.now()-t0)/1000);
+    document.getElementById('up').textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }, 1000);
+
+  function addMsg(cls, text){
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    if (cls === 'kyo') { d.innerHTML = '<b>KYO</b><span class="tx"></span>'; d.querySelector('.tx').textContent = text; }
+    else d.textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    const tx = el.querySelector('.tx'); let i = 0; el.classList.add('typing');
+    (function tick(){
+      if (i < text.length) { tx.textContent += text[i++]; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 20 + Math.random()*30); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "Acknowledged. Running your query now.",
+    "Analysis complete. Awaiting your next directive.",
+    "Understood. I have queued that task for the Hermes link.",
+    "All systems nominal. Is there anything else you require?"
+  ];
+  let ri = 0;
+  function converse(userText){
+    addMsg('you', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const m = addMsg('kyo', '');
+      typeOut(m, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1500);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) Kyo, status report.'), 1800);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) Kyo, run a demonstration.'), 1600);
+  });
+</script>
+</body>
+</html>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+- Full visual redesign: EMBER MINIMAL. Living particle-burst core (canvas) replaces the orb — flares when listening, contracts and swirls when thinking, pulses while speaking.
+- New warm ember palette (orange on graphite) replacing neon green; glossy mic button; hairline-only UI.
+- Kyo wordmark rebuilt: fully legible gradient base with periodic glitch bursts.
+- New persona: calm, precise "warm machine" assistant (replaces AI-scared hillbilly).
+- Conversation shown as floating lines with a time-aware greeting; status reads "Kyo is listening/thinking/speaking".
+- Design exploration archive added under mockups/.
+- Manifest and service worker cache bumped for clean rollout.
+
 ## 0.2.3
 - Pushed Kyo into a much more drastic AI-scared hillbilly comedy persona.
 - Tuned the voice to feel jumpy, suspicious of automation, and funny without losing usefulness.

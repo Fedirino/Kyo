@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — Concept 8: EMBER CORE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0e0e11;
+    --panel: #17161a;
+    --amber: #ff8c42;
+    --amber-hot: #ffc9a3;
+    --amber-deep: #e05c1a;
+    --amber-dim: rgba(255,140,66,0.55);
+    --amber-faint: rgba(255,140,66,0.10);
+    --ink: #f5efe9;
+    --dim: rgba(245,239,233,0.5);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; color: var(--ink); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 14%, #17151a 0%, #101013 45%, #0a0a0c 100%); }
+  body { overflow: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(circle at 82% 12%, rgba(255,140,66,0.08), transparent 38%),
+      radial-gradient(circle at 12% 86%, rgba(224,92,26,0.06), transparent 40%); }
+
+  .app { height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: max(16px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1; }
+
+  .topline { display: flex; justify-content: space-between; align-items: center; }
+  .wordmark { font-weight: 700; font-size: 26px; letter-spacing: 0.01em;
+    background: linear-gradient(120deg, var(--amber-hot), var(--amber) 55%, var(--amber-deep));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 16px rgba(255,140,66,0.35)); }
+  .iconbtn { width: 38px; height: 38px; display: grid; place-items: center; border: 0; background: transparent;
+    color: var(--dim); cursor: pointer; border-radius: 50%; transition: color .2s; }
+  .iconbtn:hover { color: var(--amber); }
+  .iconbtn svg { width: 22px; height: 22px; }
+
+  /* ===== KYO = EMBER BURST CORE ===== */
+  .stage { position: relative; height: 262px; display: grid; place-items: center; }
+  .hudring { position: absolute; width: 246px; height: 246px; border-radius: 50%;
+    border: 1px solid rgba(255,140,66,0.10); }
+  .hudring.r2 { width: 262px; height: 262px; border: 1px dashed rgba(255,140,66,0.14);
+    animation: hud 40s linear infinite; }
+  @keyframes hud { to { rotate: 360deg; } }
+  .hudtick { position: absolute; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.28em; color: rgba(245,239,233,0.22); }
+  .hudtick.a { top: 12px; right: 4px; } .hudtick.b { bottom: 16px; left: 2px; }
+  canvas#core { width: 300px; height: 252px; display: block; }
+
+  .statusword { text-align: center; font-size: 14.5px; font-weight: 400; color: var(--dim); letter-spacing: 0.02em; margin-top: -4px; }
+  .statusword b { color: var(--ink); font-weight: 500; }
+
+  .feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .msg { max-width: 84%; padding: 11px 15px; font-size: 14.5px; line-height: 1.55; border-radius: 18px; }
+  .msg.kyo { align-self: flex-start; border-bottom-left-radius: 6px; color: var(--ink);
+    background: linear-gradient(160deg, rgba(255,140,66,0.13), rgba(224,92,26,0.06));
+    border: 1px solid rgba(255,140,66,0.25); box-shadow: 0 4px 22px rgba(224,92,26,0.10); }
+  .msg.you { align-self: flex-end; border-bottom-right-radius: 6px; color: rgba(245,239,233,0.78);
+    background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.08); }
+  .typing::after { content: '●'; font-size: 8px; margin-left: 4px; color: var(--amber); animation: tpulse 0.8s ease-in-out infinite; }
+  @keyframes tpulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  /* ===== glass sheet ===== */
+  .sheet { border-radius: 28px; padding: 12px 16px 14px;
+    background: linear-gradient(180deg, rgba(40,38,43,0.72), rgba(24,23,26,0.85));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 60px rgba(224,92,26,0.07);
+    backdrop-filter: blur(18px); }
+  .handle { width: 42px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.16); margin: 0 auto 10px; }
+  .prompt { text-align: center; font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 12px; letter-spacing: 0.01em; }
+
+  .microw { display: flex; align-items: center; justify-content: center; gap: 16px; }
+  .ticks { display: flex; gap: 3px; align-items: center; }
+  .ticks i { width: 2.5px; border-radius: 2px; background: var(--amber); opacity: 0.4; transition: opacity .3s; }
+  [data-state="listening"] .ticks i, [data-state="speaking"] .ticks i { opacity: 0.95; animation: tick 0.6s ease-in-out infinite; }
+  [data-state="listening"] .ticks i { animation-duration: 1s; }
+  @keyframes tick { 0%,100% { transform: scaleY(0.55); } 50% { transform: scaleY(1.25); } }
+
+  .mic { position: relative; width: 76px; height: 76px; border-radius: 50%; border: 0; cursor: pointer; color: #fff;
+    background: radial-gradient(circle at 38% 28%, #ffdcbc 0%, #ffa25c 32%, #ee6d22 62%, #a83d0d 100%);
+    box-shadow:
+      0 0 0 5px rgba(255,140,66,0.14),
+      0 0 0 1px rgba(255,201,163,0.5),
+      0 10px 30px rgba(224,92,26,0.45),
+      0 0 46px rgba(255,140,66,0.35),
+      inset 0 -8px 16px rgba(120,40,4,0.5), inset 0 6px 10px rgba(255,255,255,0.35);
+    display: grid; place-items: center; transition: transform .15s, box-shadow .3s; }
+  .mic svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 3px rgba(90,30,0,0.5)); }
+  .mic:active { transform: scale(0.94); }
+  .mic::before { content: ''; position: absolute; inset: -11px; border-radius: 50%;
+    border: 1.5px solid rgba(255,140,66,0.35); transition: all .3s; }
+  [data-state="listening"] .mic { box-shadow:
+      0 0 0 6px rgba(255,140,66,0.22), 0 0 0 1px rgba(255,201,163,0.7),
+      0 10px 34px rgba(224,92,26,0.6), 0 0 80px rgba(255,140,66,0.55),
+      inset 0 -8px 16px rgba(120,40,4,0.5), inset 0 6px 10px rgba(255,255,255,0.4); }
+  [data-state="listening"] .mic::before { animation: ringping 1.4s ease-out infinite; }
+  @keyframes ringping { 0% { transform: scale(0.95); opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
+
+  .composer { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding: 9px 13px; border-radius: 999px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+    color: var(--ink); font-family: var(--display); font-size: 14px; caret-color: var(--amber); }
+  .composer input::placeholder { color: rgba(245,239,233,0.35); }
+  .composer button { border: 0; border-radius: 999px; padding: 7px 14px; cursor: pointer;
+    font-family: var(--display); font-weight: 600; font-size: 12px; color: #2b1204;
+    background: linear-gradient(120deg, var(--amber-hot), var(--amber) 60%, var(--amber-deep)); }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding-top: 8px; }
+  .chips button { background: transparent; border: 1px solid rgba(255,140,66,0.18); border-radius: 999px; color: var(--dim);
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; padding: 6px 12px; cursor: pointer; text-transform: uppercase; }
+  .chips button:hover, .chips button.on { border-color: var(--amber); color: var(--amber-hot); background: var(--amber-faint); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9.5px;
+    letter-spacing: 0.2em; color: rgba(245,239,233,0.3); padding-top: 8px; }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <div class="wordmark">Kyo</div>
+      <button class="iconbtn" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <section class="stage" aria-label="Kyo ember core">
+      <div class="hudring"></div>
+      <div class="hudring r2"></div>
+      <span class="hudtick a">HUD</span>
+      <span class="hudtick b">KYO-CORE</span>
+      <canvas id="core" width="600" height="504"></canvas>
+    </section>
+    <div class="statusword" id="status"><b>Kyo</b> is here</div>
+
+    <section class="feed" id="feed">
+      <div class="msg kyo">Good evening, Nick. How can I help?</div>
+    </section>
+
+    <div class="sheet">
+      <div class="handle"></div>
+      <div class="prompt">How can Kyo help you today?</div>
+      <div class="microw">
+        <div class="ticks" aria-hidden="true">
+          <i style="height:7px"></i><i style="height:13px;animation-delay:.08s"></i><i style="height:9px;animation-delay:.16s"></i><i style="height:17px;animation-delay:.04s"></i><i style="height:11px;animation-delay:.12s"></i><i style="height:19px;animation-delay:.2s"></i><i style="height:8px;animation-delay:.06s"></i>
+        </div>
+        <button class="mic" id="mic" aria-label="Talk to Kyo">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </button>
+        <div class="ticks" aria-hidden="true">
+          <i style="height:9px;animation-delay:.1s"></i><i style="height:18px;animation-delay:.02s"></i><i style="height:8px;animation-delay:.18s"></i><i style="height:14px;animation-delay:.07s"></i><i style="height:10px;animation-delay:.14s"></i><i style="height:16px;animation-delay:.05s"></i><i style="height:7px;animation-delay:.11s"></i>
+        </div>
+      </div>
+      <form class="composer" id="composer">
+        <input id="in" type="text" placeholder="Or type to Kyo…" autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+      <div class="chips" aria-label="Demo states">
+        <button data-s="idle" class="on">Idle</button>
+        <button data-s="listening">Listen</button>
+        <button data-s="thinking">Think</button>
+        <button data-s="speaking">Speak</button>
+        <button id="demo">▶ Demo</button>
+      </div>
+    </div>
+
+    <div class="foot"><span>Kyo v0.2.3 — concept 8 «EMBER CORE»</span><span>WARM MACHINE</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  let speakAmp = 0;
+
+  const LABEL = {
+    idle: '<b>Kyo</b> is here',
+    listening: '<b>Kyo</b> is listening…',
+    thinking: '<b>Kyo</b> is thinking…',
+    speaking: '<b>Kyo</b> is speaking'
+  };
+  function setState(s){
+    body.dataset.state = s;
+    status.innerHTML = LABEL[s];
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+
+  /* ===== ember burst engine ===== */
+  const cv = document.getElementById('core');
+  const cx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+  const N = 240, P = [];
+  for (let i = 0; i < N; i++) {
+    P.push({
+      ang: Math.random()*Math.PI*2,
+      baseR: 96 + (Math.random()-0.5)*22,
+      len: Math.random() < 0.28 ? 44 + Math.random()*96 : 8 + Math.random()*30,
+      tw: 1.5 + Math.random()*3.5,
+      ph: Math.random()*Math.PI*2,
+      drift: (Math.random()-0.5)*0.0022
+    });
+  }
+  let time = 0, rot = 0;
+  function frame(){
+    time += 0.016; speakAmp *= 0.90;
+    const s = body.dataset.state;
+    rot += s === 'listening' ? 0.0032 : s === 'thinking' ? 0.010 : 0.0012;
+    let S = 0.42;
+    if (s === 'listening') S = 1.0;
+    else if (s === 'thinking') S = 0.24;
+    else if (s === 'speaking') S = 0.5 + Math.min(speakAmp, 34)/40;
+
+    cx.clearRect(0, 0, W, H);
+    const g = cx.createRadialGradient(CX, CY, 20, CX, CY, 120);
+    g.addColorStop(0, 'rgba(255,140,66,0.10)');
+    g.addColorStop(1, 'rgba(255,140,66,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(CX, CY, 120, 0, 6.29); cx.fill();
+
+    for (const p of P) {
+      const a = p.ang + rot + (s === 'thinking' ? Math.sin(time*2 + p.ph)*0.06 : 0);
+      const tw = 0.62 + 0.38*Math.sin(time*p.tw + p.ph);
+      const spike = p.len * S * tw + 3;
+      const r0 = p.baseR * (s === 'thinking' ? 0.82 : 1) * (s === 'speaking' ? 1 + Math.sin(time*9)*0.03 : 1);
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const x0 = CX + ca*r0, y0 = CY + sa*r0*0.96;
+      const x1 = CX + ca*(r0 + spike), y1 = CY + sa*(r0 + spike)*0.96;
+      cx.strokeStyle = 'rgba(224,92,26,' + (0.30 + 0.34*tw).toFixed(3) + ')';
+      cx.lineWidth = 1.6;
+      cx.beginPath(); cx.moveTo(x0, y0); cx.lineTo(x1, y1); cx.stroke();
+      cx.fillStyle = 'rgba(255,201,163,' + (0.5 + 0.5*tw).toFixed(3) + ')';
+      cx.beginPath(); cx.arc(x0, y0, 1.9, 0, 6.29); cx.fill();
+      cx.fillStyle = 'rgba(255,140,66,' + (0.35 + 0.45*tw).toFixed(3) + ')';
+      cx.beginPath(); cx.arc(x1, y1, 1.3, 0, 6.29); cx.fill();
+    }
+    cx.strokeStyle = 'rgba(255,201,163,0.30)';
+    cx.lineWidth = 1;
+    cx.beginPath(); cx.arc(CX, CY, 86, 0, 6.29); cx.stroke();
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  /* ===== chat ===== */
+  function addMsg(cls, text){
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls; d.textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    let i = 0; el.classList.add('typing'); el.textContent = '';
+    (function tick(){
+      if (i < text.length) { el.textContent += text[i++]; speakAmp = 16 + Math.random()*22; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 22 + Math.random()*30); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "On it — one moment.",
+    "Done. Anything else I can take care of?",
+    "Understood. I'll route that through Hermes once we're linked.",
+    "All set. I'm here when you need me."
+  ];
+  let ri = 0;
+  function converse(userText){
+    addMsg('you', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const m = addMsg('kyo', '');
+      typeOut(m, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1600);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) Hey Kyo, you with me?'), 1900);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) Kyo, run a demo.'), 1600);
+  });
+</script>
+</body>
+</html>

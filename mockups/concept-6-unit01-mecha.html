@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — Concept 6: UNIT-01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0d11;
+    --amb: #ffb000;
+    --amb-hot: #ffe6ae;
+    --amb-dim: rgba(255,176,0,0.5);
+    --amb-faint: rgba(255,176,0,0.10);
+    --steel: #1c222b;
+    --steel-hi: #2b3441;
+    --steel-lo: #12161d;
+    --edge: #3d4654;
+    --hud: 'Chakra Petch', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; color: #d8dde6; font-family: var(--hud);
+    background: linear-gradient(180deg, #11141a 0%, #0b0d11 40%, #07080b 100%); }
+  body { overflow: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: 0.5;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 59px, rgba(255,255,255,0.025) 59px 60px),
+      repeating-linear-gradient(90deg, transparent 0 59px, rgba(255,255,255,0.02) 59px 60px); }
+
+  .app { height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: max(16px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1; }
+
+  .topline { display: flex; justify-content: space-between; align-items: center; }
+  .brand { font-weight: 700; font-size: 18px; letter-spacing: 0.18em; color: #f2f5f9; }
+  .brand b { color: var(--amb); text-shadow: 0 0 14px rgba(255,176,0,0.55); }
+  .brand small { display: block; font-family: var(--mono); font-size: 8.5px; font-weight: 400; letter-spacing: 0.3em; color: rgba(216,221,230,0.45); margin-top: 2px; }
+  .tele { font-family: var(--mono); font-size: 9.5px; text-align: right; color: rgba(216,221,230,0.5); line-height: 1.7; letter-spacing: 0.12em; }
+  .tele b { color: var(--amb); font-weight: 500; }
+
+  .hazard { height: 5px; border-radius: 3px; opacity: 0.5;
+    background: repeating-linear-gradient(-45deg, var(--amb) 0 10px, #0b0d11 10px 20px); }
+
+  /* ===== KYO = UNIT-01 FACEPLATE ===== */
+  .stage { position: relative; height: 224px; display: grid; place-items: center; }
+  .unit { position: relative; width: 206px; height: 152px; animation: servo 6s ease-in-out infinite; }
+  @keyframes servo { 0%, 100% { transform: translateY(2px) rotate(0deg); } 50% { transform: translateY(-4px) rotate(0.4deg); } }
+  [data-state="listening"] .unit { animation: none; transform: rotate(-2deg); }
+
+  .plate { position: absolute; inset: 0;
+    background: linear-gradient(170deg, var(--steel-hi) 0%, var(--steel) 50%, var(--steel-lo) 100%);
+    clip-path: polygon(14% 0, 86% 0, 100% 22%, 100% 78%, 86% 100%, 14% 100%, 0 78%, 0 22%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.08), inset 0 -12px 24px rgba(0,0,0,0.5); }
+  .plate::before { content: ''; position: absolute; inset: 7px;
+    clip-path: polygon(14% 0, 86% 0, 100% 22%, 100% 78%, 86% 100%, 14% 100%, 0 78%, 0 22%);
+    border: 1px solid rgba(255,255,255,0.07); background: transparent; }
+  .plate::after { content: ''; position: absolute; left: 18%; right: 18%; top: 50%; height: 1px; background: rgba(0,0,0,0.45); }
+
+  .rivet { position: absolute; width: 7px; height: 7px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #4a5566, #232a35 70%); box-shadow: inset 0 -1px 2px rgba(0,0,0,0.7); }
+  .rv1 { top: 12px; left: 34px; } .rv2 { top: 12px; right: 34px; }
+  .rv3 { bottom: 12px; left: 34px; } .rv4 { bottom: 12px; right: 34px; }
+
+  .vent { position: absolute; top: 46px; width: 12px; height: 60px; display: flex; flex-direction: column; gap: 5px; }
+  .vent.l { left: -18px; } .vent.r { right: -18px; }
+  .vent i { flex: 1; border-radius: 2px; background: #171c24; border: 1px solid #2a323e; transition: all .25s; }
+  [data-state="listening"] .vent i { background: var(--amb); border-color: var(--amb-hot); box-shadow: 0 0 12px rgba(255,176,0,0.7); }
+  [data-state="listening"] .vent i:nth-child(1) { transition-delay: 0s; }
+  [data-state="listening"] .vent i:nth-child(2) { transition-delay: .12s; }
+  [data-state="listening"] .vent i:nth-child(3) { transition-delay: .24s; }
+
+  .antband { position: absolute; top: -13px; left: 50%; translate: -50% 0; width: 58px; height: 9px;
+    background: var(--steel-lo); border: 1px solid var(--edge); border-radius: 3px; }
+  .antband::after { content: ''; position: absolute; top: 2px; left: 50%; translate: -50% 0; width: 7px; height: 3px;
+    border-radius: 2px; background: var(--amb); box-shadow: 0 0 8px rgba(255,176,0,0.8); animation: beacon 2.4s steps(1) infinite; }
+  @keyframes beacon { 0%, 46%, 100% { opacity: 1; } 50%, 96% { opacity: 0.15; } }
+
+  .eyes { position: absolute; top: 46px; left: 0; right: 0; display: flex; justify-content: center; gap: 30px; }
+  .eyesock { width: 52px; height: 22px; border-radius: 5px; background: #07090c;
+    border: 1px solid #2a323e; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); display: grid; place-items: center; overflow: hidden; position: relative; }
+  .led { width: 40px; height: 10px; border-radius: 2.5px;
+    background: linear-gradient(180deg, var(--amb-hot), var(--amb) 65%);
+    box-shadow: 0 0 14px rgba(255,176,0,0.9), 0 0 34px rgba(255,176,0,0.4);
+    animation: flick 4.7s steps(1) infinite; transition: height .25s; }
+  .eyesock.r .led { animation-delay: 0.05s; }
+  @keyframes flick { 0%, 91%, 100% { opacity: 1; } 92%, 93.4% { opacity: 0.1; } 93.5%, 94.4% { opacity: 1; } 94.5%, 95.4% { opacity: 0.1; } }
+  [data-state="listening"] .led { height: 16px; animation: none; }
+  [data-state="thinking"] .led { animation: none; opacity: 0.22; }
+  .loadbar { position: absolute; left: 5px; right: 5px; top: 50%; height: 4px; translate: 0 -50%; border-radius: 2px;
+    background: #12161d; opacity: 0; overflow: hidden; }
+  .loadbar::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 45%;
+    background: var(--amb); box-shadow: 0 0 10px rgba(255,176,0,0.8); animation: load 1s linear infinite; }
+  @keyframes load { 0% { left: -45%; } 100% { left: 100%; } }
+  [data-state="thinking"] .loadbar { opacity: 1; }
+
+  .grill { position: absolute; bottom: 24px; left: 50%; translate: -50% 0; display: flex; gap: 5px; align-items: flex-end; height: 26px; }
+  .grill i { width: 7px; height: 4px; border-radius: 1.5px; background: #2a323e; transition: background .2s;
+    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.55) 2px 4px); }
+  [data-state="speaking"] .grill i { background-color: var(--amb); box-shadow: 0 0 10px rgba(255,176,0,0.7); animation: geq 0.4s ease-in-out infinite; }
+  [data-state="speaking"] .grill i:nth-child(2) { animation-delay: .1s; }
+  [data-state="speaking"] .grill i:nth-child(3) { animation-delay: .05s; }
+  [data-state="speaking"] .grill i:nth-child(4) { animation-delay: .15s; }
+  [data-state="speaking"] .grill i:nth-child(5) { animation-delay: .08s; }
+  [data-state="speaking"] .grill i:nth-child(6) { animation-delay: .12s; }
+  @keyframes geq { 0%, 100% { height: 4px; } 50% { height: 22px; } }
+
+  .statusword { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.4em; color: rgba(216,221,230,0.5); text-transform: uppercase; }
+  .statusword b { color: var(--amb); font-weight: 500; }
+
+  .feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .msg { max-width: 86%; padding: 10px 14px; font-size: 14px; line-height: 1.5; font-family: var(--hud); font-weight: 500; }
+  .msg.kyo { align-self: flex-start; color: #f4ede0; background: linear-gradient(180deg, rgba(255,176,0,0.09), rgba(255,176,0,0.03));
+    border: 1px solid rgba(255,176,0,0.3); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+  .msg.kyo b { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.3em; color: var(--amb-dim); margin-bottom: 4px; font-weight: 500; }
+  .msg.you { align-self: flex-end; color: rgba(216,221,230,0.75); background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+  .typing::after { content: '_'; color: var(--amb); animation: cblink 0.7s steps(1) infinite; }
+  @keyframes cblink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+  .composer { display: flex; gap: 8px; align-items: center; padding: 12px 14px;
+    background: var(--steel-lo); border: 1px solid var(--edge);
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+    color: #f2f5f9; font-family: var(--hud); font-size: 14.5px; font-weight: 500; caret-color: var(--amb); }
+  .composer input::placeholder { color: rgba(216,221,230,0.3); }
+  .composer button { border: 0; padding: 8px 16px; cursor: pointer; font-family: var(--hud); font-weight: 700;
+    font-size: 11px; letter-spacing: 0.16em; color: #1a1204; background: linear-gradient(180deg, var(--amb-hot), var(--amb) 60%, #c78900);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); }
+
+  .micline { display: grid; place-items: center; padding-top: 4px; }
+  .mic { width: 86px; height: 86px; cursor: pointer; color: var(--amb);
+    background: linear-gradient(170deg, var(--steel-hi), var(--steel-lo)); border: 1.5px solid var(--edge);
+    clip-path: polygon(28% 0, 72% 0, 100% 28%, 100% 72%, 72% 100%, 28% 100%, 0 72%, 0 28%);
+    display: grid; place-items: center; transition: all .25s; }
+  .mic svg { width: 30px; height: 30px; filter: drop-shadow(0 0 8px rgba(255,176,0,0.6)); }
+  .mic:active { transform: scale(0.95); }
+  [data-state="listening"] .mic { color: #1a1204; border-color: var(--amb-hot);
+    background: linear-gradient(180deg, var(--amb-hot), var(--amb) 60%, #c78900);
+    box-shadow: 0 0 46px rgba(255,176,0,0.45); }
+  .miclabel { text-align: center; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.3em; color: rgba(216,221,230,0.45); margin-top: 8px; text-transform: uppercase; }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding-top: 6px; }
+  .chips button { background: transparent; border: 1px solid #2a323e; color: rgba(216,221,230,0.5);
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; padding: 6px 11px; cursor: pointer; text-transform: uppercase; }
+  .chips button:hover, .chips button.on { border-color: var(--amb); color: var(--amb-hot); background: var(--amb-faint); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9.5px;
+    letter-spacing: 0.2em; color: rgba(216,221,230,0.3); border-top: 1px solid #1d232c; padding-top: 8px; }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <div class="brand">KYO <b>UNIT-01</b><small>HEAVY ASSISTANT CHASSIS</small></div>
+      <div class="tele">PWR <b id="pwr">97.8%</b> · SERVO <b>OK</b><br/>LINK <b>HERMES</b> <span id="linkst">:: WAIT</span></div>
+    </div>
+    <div class="hazard"></div>
+
+    <section class="stage" aria-label="Kyo unit faceplate">
+      <div class="unit">
+        <div class="antband"></div>
+        <div class="vent l"><i></i><i></i><i></i></div>
+        <div class="vent r"><i></i><i></i><i></i></div>
+        <div class="plate"></div>
+        <div class="rivet rv1"></div><div class="rivet rv2"></div><div class="rivet rv3"></div><div class="rivet rv4"></div>
+        <div class="eyes">
+          <div class="eyesock l"><div class="led"></div><div class="loadbar"></div></div>
+          <div class="eyesock r"><div class="led"></div><div class="loadbar"></div></div>
+        </div>
+        <div class="grill"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </section>
+    <div class="statusword" id="status">STANDBY</div>
+
+    <section class="feed" id="feed">
+      <div class="msg kyo"><b>UNIT-01</b>UNIT-01 ready. Awaiting directive.</div>
+    </section>
+
+    <form class="composer" id="composer">
+      <input id="in" type="text" placeholder="ENTER DIRECTIVE" autocomplete="off" />
+      <button type="submit">EXEC</button>
+    </form>
+
+    <div class="micline">
+      <button class="mic" id="mic" aria-label="Talk to Kyo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="miclabel" id="miclabel">Audio input</div>
+
+    <div class="chips" aria-label="Demo states">
+      <button data-s="idle" class="on">Idle</button>
+      <button data-s="listening">Listen</button>
+      <button data-s="thinking">Think</button>
+      <button data-s="speaking">Speak</button>
+      <button id="demo">▶ Demo</button>
+    </div>
+
+    <div class="foot"><span>KYO v0.2.3 — CONCEPT 6 «UNIT-01»</span><span>MECHA</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  const miclabel = document.getElementById('miclabel');
+  const linkst = document.getElementById('linkst');
+
+  const LABEL = { idle:'STANDBY', listening:'AUDIO IN — <b>REC</b>', thinking:'COMPUTE CYCLE', speaking:'OUTPUT ACTIVE' };
+  const MICL  = { idle:'Audio input', listening:'Recording — tap to stop', thinking:'Hold…', speaking:'Hold…' };
+  function setState(s){
+    body.dataset.state = s;
+    status.innerHTML = LABEL[s];
+    miclabel.textContent = MICL[s];
+    linkst.textContent = s === 'idle' ? ':: WAIT' : ':: LIVE';
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+
+  setInterval(() => {
+    document.getElementById('pwr').textContent = (96.5 + Math.random()*2.6).toFixed(1) + '%';
+  }, 1600);
+
+  function addMsg(cls, text){
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    if (cls === 'kyo') { d.innerHTML = '<b>UNIT-01</b><span class="tx"></span>'; d.querySelector('.tx').textContent = text; }
+    else d.textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    const tx = el.querySelector('.tx'); let i = 0; el.classList.add('typing');
+    (function tick(){
+      if (i < text.length) { tx.textContent += text[i++]; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 18 + Math.random()*26); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "Affirmative. Executing.",
+    "Directive received. Computation complete.",
+    "Task queued for Hermes uplink. Standing by.",
+    "Negative faults detected. All systems within tolerance."
+  ];
+  let ri = 0;
+  function converse(userText){
+    addMsg('you', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const m = addMsg('kyo', '');
+      typeOut(m, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1600);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) Unit, report status.'), 1800);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) Unit, run demonstration.'), 1600);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — Concept 7: FACE OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #05060a;
+    --white: #f2f6ff;
+    --blue: #4d7cff;
+    --blue-soft: rgba(77,124,255,0.55);
+    --dim: rgba(242,246,255,0.42);
+    --faint: rgba(242,246,255,0.09);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--white); font-family: var(--display); }
+  body { overflow: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 24%, rgba(77,124,255,0.09), transparent 55%); }
+
+  .app { height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: max(20px, env(safe-area-inset-top)) 22px max(18px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1; }
+
+  .topline { display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--dim); }
+  .topline .id { color: var(--white); font-family: var(--display); font-weight: 500; font-size: 15px; letter-spacing: 0.14em; }
+  .topline .id::after { content: ' os'; color: var(--blue); }
+
+  /* ===== KYO = A FACE MADE OF LIGHT ===== */
+  .stage { position: relative; height: 216px; display: grid; place-items: center; }
+  .facecard { position: relative; width: 208px; height: 172px; border-radius: 34px;
+    background: rgba(242,246,255,0.025); border: 1px solid rgba(242,246,255,0.08);
+    display: grid; place-items: center; transition: border-color .4s, box-shadow .4s; }
+  [data-state="listening"] .facecard { border-color: rgba(77,124,255,0.55); box-shadow: 0 0 44px -8px rgba(77,124,255,0.45); }
+  [data-state="speaking"]  .facecard { border-color: rgba(242,246,255,0.28); box-shadow: 0 0 44px -10px rgba(242,246,255,0.3); }
+
+  .face { position: relative; width: 120px; height: 96px; }
+  .eyecol { position: absolute; top: 8px; display: flex; align-items: flex-start; justify-content: center; width: 16px; height: 64px; transition: all .35s ease; }
+  .eyecol.l { left: 22px; } .eyecol.r { right: 22px; }
+  .bar { width: 13px; height: 52px; border-radius: 8px; background: var(--white);
+    box-shadow: 0 0 22px rgba(77,124,255,0.55), 0 0 8px rgba(242,246,255,0.6);
+    animation: breathe 4s ease-in-out infinite, blink 5.4s infinite;
+    transition: height .35s ease, width .35s ease, border-radius .35s ease, translate .35s ease; }
+  .eyecol.r .bar { animation-delay: 0s, .07s; }
+  @keyframes breathe { 0%, 100% { scale: 1 1; } 50% { scale: 1 0.88; } }
+  @keyframes blink { 0%, 93.5%, 100% { transform: scaleY(1); } 95.5%, 96.8% { transform: scaleY(0.06); } }
+  [data-state="listening"] .bar { height: 68px; animation: none; }
+  [data-state="thinking"] .bar { height: 13px; border-radius: 50%; translate: 0 22px; animation: none; }
+  .middot { position: absolute; left: 50%; top: 30px; translate: -50% 22px; width: 13px; height: 13px; border-radius: 50%;
+    background: var(--white); opacity: 0; transition: opacity .3s; box-shadow: 0 0 18px rgba(77,124,255,0.6); }
+  [data-state="thinking"] .middot { opacity: 1; }
+  [data-state="thinking"] .eyecol.l .bar { animation: dotpulse 1.2s ease-in-out infinite; }
+  [data-state="thinking"] .middot      { animation: dotpulse 1.2s ease-in-out .2s infinite; }
+  [data-state="thinking"] .eyecol.r .bar { animation: dotpulse 1.2s ease-in-out .4s infinite; }
+  @keyframes dotpulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+  .mouth { position: absolute; left: 50%; bottom: -2px; translate: -50% 0; display: flex; gap: 3.5px; align-items: center; height: 22px; opacity: 0; transition: opacity .3s; }
+  .mouth i { width: 4px; height: 4px; border-radius: 3px; background: var(--blue); box-shadow: 0 0 10px rgba(77,124,255,0.8); }
+  [data-state="speaking"] .mouth { opacity: 1; }
+  [data-state="speaking"] .mouth i { animation: eq 0.46s ease-in-out infinite; }
+  [data-state="speaking"] .mouth i:nth-child(2) { animation-delay: .08s; }
+  [data-state="speaking"] .mouth i:nth-child(3) { animation-delay: .04s; }
+  [data-state="speaking"] .mouth i:nth-child(4) { animation-delay: .14s; }
+  [data-state="speaking"] .mouth i:nth-child(5) { animation-delay: .06s; }
+  [data-state="speaking"] .mouth i:nth-child(6) { animation-delay: .11s; }
+  [data-state="speaking"] .mouth i:nth-child(7) { animation-delay: .02s; }
+  [data-state="speaking"] .mouth i:nth-child(8) { animation-delay: .09s; }
+  [data-state="speaking"] .mouth i:nth-child(9) { animation-delay: .13s; }
+  @keyframes eq { 0%, 100% { height: 4px; } 50% { height: 18px; } }
+
+  .inring { position: absolute; bottom: -30px; left: 50%; translate: -50% 0; width: 44px; height: 5px; border-radius: 3px;
+    background: rgba(77,124,255,0.25); overflow: hidden; opacity: 0; transition: opacity .3s; }
+  .inring::after { content: ''; position: absolute; inset: 0; width: 40%; background: var(--blue); border-radius: 3px; animation: sweep 1s linear infinite; }
+  @keyframes sweep { 0% { left: -40%; } 100% { left: 100%; } }
+  [data-state="listening"] .inring { opacity: 1; }
+
+  .statusword { text-align: center; font-size: 13px; font-weight: 300; letter-spacing: 0.34em; color: var(--dim); text-transform: lowercase; }
+  .statusword b { color: var(--blue); font-weight: 400; }
+
+  .feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; padding: 4px 2px; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .msg { max-width: 84%; padding: 11px 15px; font-size: 15px; line-height: 1.55; border-radius: 18px; font-weight: 300; }
+  .msg.kyo { align-self: flex-start; border-bottom-left-radius: 5px; color: var(--white);
+    background: rgba(77,124,255,0.10); border: 1px solid rgba(77,124,255,0.28); }
+  .msg.you { align-self: flex-end; border-bottom-right-radius: 5px; color: rgba(242,246,255,0.75);
+    background: rgba(242,246,255,0.05); border: 1px solid rgba(242,246,255,0.08); }
+  .typing::after { content: '·'; color: var(--blue); font-weight: 500; animation: cpulse 0.7s ease-in-out infinite; }
+  @keyframes cpulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+  .composer { display: flex; gap: 8px; align-items: center; padding: 12px 16px; border-radius: 22px;
+    background: rgba(242,246,255,0.035); border: 1px solid rgba(242,246,255,0.1); transition: border-color .3s; }
+  .composer:focus-within { border-color: rgba(77,124,255,0.5); }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+    color: var(--white); font-family: var(--display); font-size: 15px; font-weight: 300; caret-color: var(--blue); }
+  .composer input::placeholder { color: rgba(242,246,255,0.28); }
+  .composer button { border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    font-family: var(--display); font-weight: 500; font-size: 12.5px; color: #060a14; background: var(--blue);
+    box-shadow: 0 4px 18px rgba(77,124,255,0.35); }
+  .composer button:active { transform: scale(0.96); }
+
+  .micline { display: grid; place-items: center; padding-top: 6px; }
+  .mic { width: 78px; height: 78px; border-radius: 50%; cursor: pointer; color: var(--white);
+    background: rgba(242,246,255,0.04); border: 1px solid rgba(242,246,255,0.14);
+    display: grid; place-items: center; transition: all .3s; }
+  .mic svg { width: 28px; height: 28px; }
+  .mic:hover { border-color: var(--blue-soft); box-shadow: 0 0 30px -8px var(--blue); }
+  .mic:active { transform: scale(0.94); }
+  [data-state="listening"] .mic { color: #060a14; background: var(--blue); border-color: transparent;
+    box-shadow: 0 0 56px -6px var(--blue); }
+  .miclabel { text-align: center; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.32em; color: var(--dim); margin-top: 9px; text-transform: lowercase; }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding-top: 8px; }
+  .chips button { background: transparent; border: 1px solid var(--faint); border-radius: 999px; color: var(--dim);
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; padding: 6px 12px; cursor: pointer; text-transform: lowercase; }
+  .chips button:hover, .chips button.on { border-color: var(--blue-soft); color: var(--white); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9.5px;
+    letter-spacing: 0.2em; color: rgba(242,246,255,0.28); border-top: 1px solid var(--faint); padding-top: 9px; }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <span class="id">kyo</span>
+      <span id="clock">--:--</span>
+    </div>
+
+    <section class="stage" aria-label="Kyo face">
+      <div class="facecard">
+        <div class="face">
+          <div class="eyecol l"><div class="bar"></div></div>
+          <div class="eyecol r"><div class="bar"></div></div>
+          <div class="middot"></div>
+          <div class="mouth"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="inring"></div>
+        </div>
+      </div>
+    </section>
+    <div class="statusword" id="status">idle</div>
+
+    <section class="feed" id="feed">
+      <div class="msg kyo">hey — what do you need?</div>
+    </section>
+
+    <form class="composer" id="composer">
+      <input id="in" type="text" placeholder="ask kyo anything…" autocomplete="off" />
+      <button type="submit">send</button>
+    </form>
+
+    <div class="micline">
+      <button class="mic" id="mic" aria-label="Talk to Kyo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="miclabel" id="miclabel">tap to talk</div>
+
+    <div class="chips" aria-label="Demo states">
+      <button data-s="idle" class="on">idle</button>
+      <button data-s="listening">listen</button>
+      <button data-s="thinking">think</button>
+      <button data-s="speaking">speak</button>
+      <button id="demo">▶ demo</button>
+    </div>
+
+    <div class="foot"><span>kyo v0.2.3 — concept 7 «face os»</span><span>software face</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  const miclabel = document.getElementById('miclabel');
+
+  const LABEL = { idle:'idle', listening:'<b>listening…</b>', thinking:'thinking…', speaking:'<b>speaking</b>' };
+  const MICL  = { idle:'tap to talk', listening:'listening — tap to stop', thinking:'one sec…', speaking:'one sec…' };
+  function setState(s){
+    body.dataset.state = s;
+    status.innerHTML = LABEL[s];
+    miclabel.textContent = MICL[s];
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+
+  setInterval(() => {
+    const d = new Date();
+    document.getElementById('clock').textContent =
+      String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }, 1000);
+
+  function addMsg(cls, text){
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls; d.textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    let i = 0; el.classList.add('typing'); el.textContent = '';
+    (function tick(){
+      if (i < text.length) { el.textContent += text[i++]; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 22 + Math.random()*30); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "on it.",
+    "done — anything else?",
+    "got it. i'll route that through hermes when we're linked.",
+    "all systems green. you're good."
+  ];
+  let ri = 0;
+  function converse(userText){
+    addMsg('you', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const m = addMsg('kyo', '');
+      typeOut(m, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1500);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) hey kyo, you there?'), 1800);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) kyo, show me what you got'), 1600);
+  });
+</script>
+</body>
+</html>

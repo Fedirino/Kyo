@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — Concept 3: SPRITE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #070312;
+    --vi: #b96bff;
+    --mg: #ff5ec8;
+    --vi-hot: #efe1ff;
+    --vi-dim: rgba(185,107,255,0.5);
+    --vi-faint: rgba(185,107,255,0.12);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; color: var(--vi-hot); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 15%, #150a2b 0%, #0c0520 45%, #050210 100%); }
+  body { overflow: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(circle at 24% 22%, rgba(185,107,255,0.14), transparent 40%),
+      radial-gradient(circle at 78% 80%, rgba(255,94,200,0.10), transparent 42%);
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translate(3%, 2%) scale(1.05); } }
+
+  .app {
+    height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: max(16px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1;
+  }
+
+  .topline { display: flex; justify-content: space-between; align-items: center; }
+  .brand { font-weight: 700; font-size: 22px; letter-spacing: 0.06em;
+    background: linear-gradient(90deg, var(--vi-hot), var(--vi) 50%, var(--mg));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 12px rgba(185,107,255,0.5)); }
+  .mood { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--vi-dim); text-transform: uppercase; }
+  .mood b { color: var(--mg); font-weight: 500; }
+
+  /* ===== KYO = THE SPRITE (a face you can read) ===== */
+  .stage { position: relative; height: 230px; display: grid; place-items: center; }
+  .shadow { position: absolute; bottom: 22px; width: 120px; height: 16px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(185,107,255,0.35), transparent 70%);
+    animation: shadowBob 4s ease-in-out infinite; }
+  @keyframes shadowBob { 0%,100% { transform: scaleX(1); opacity: 0.8; } 50% { transform: scaleX(0.82); opacity: 0.5; } }
+
+  .sprite { position: relative; width: 168px; height: 138px; animation: hover 4s ease-in-out infinite; transition: transform .4s ease; }
+  @keyframes hover { 0%,100% { transform: translateY(6px); } 50% { transform: translateY(-8px); } }
+  [data-state="listening"] .sprite { transform: rotate(-4deg) scale(1.03); }
+  [data-state="thinking"]  .sprite { transform: rotate(2deg); }
+
+  .head {
+    position: absolute; inset: 0; border-radius: 46px;
+    background: linear-gradient(160deg, #1d1038 0%, #140a2a 60%, #0d0620 100%);
+    border: 2px solid rgba(185,107,255,0.55);
+    box-shadow:
+      0 0 30px rgba(185,107,255,0.35), 0 0 90px rgba(185,107,255,0.15),
+      inset 0 -14px 30px rgba(255,94,200,0.10), inset 0 10px 24px rgba(185,107,255,0.12);
+  }
+  .head::before {
+    content: ''; position: absolute; inset: 8px; border-radius: 38px;
+    border: 1px solid rgba(239,225,255,0.10);
+  }
+  /* visor sheen sweep */
+  .head::after {
+    content: ''; position: absolute; inset: 0; border-radius: 46px; overflow: hidden;
+    background: linear-gradient(115deg, transparent 30%, rgba(239,225,255,0.14) 45%, transparent 60%);
+    background-size: 300% 100%;
+    animation: sheen 5.5s ease-in-out infinite;
+  }
+  @keyframes sheen { 0%, 60%, 100% { background-position: 120% 0; } 30% { background-position: -60% 0; } }
+
+  .antenna { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background: var(--vi-dim); }
+  .antenna::after { content: ''; position: absolute; top: -9px; left: 50%; transform: translateX(-50%);
+    width: 9px; height: 9px; border-radius: 50%; background: var(--mg);
+    box-shadow: 0 0 10px var(--mg); transition: all .3s; }
+  [data-state="listening"] .antenna::after { animation: antPing 0.8s ease-in-out infinite; }
+  @keyframes antPing { 0%,100% { box-shadow: 0 0 8px var(--mg); } 50% { box-shadow: 0 0 22px var(--mg), 0 0 40px rgba(255,94,200,0.6); } }
+
+  .eyes { position: absolute; top: 42px; left: 0; right: 0; display: flex; justify-content: center; gap: 34px; }
+  .eye { width: 26px; height: 38px; border-radius: 13px; background: linear-gradient(180deg, var(--vi-hot), var(--vi));
+    box-shadow: 0 0 16px rgba(185,107,255,0.9), 0 0 36px rgba(185,107,255,0.4);
+    animation: blink 4.6s infinite; transition: transform .3s, height .3s, border-radius .3s; }
+  .eye.r { animation-delay: 0.06s; }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95%, 97% { transform: scaleY(0.08); } }
+  [data-state="listening"] .eye { transform: scale(1.18); }
+  [data-state="thinking"] .eye { height: 14px; border-radius: 7px; transform: translateY(-8px); animation: none; }
+  [data-state="speaking"] .eye { animation: happyEyes 1.6s ease-in-out infinite; }
+  @keyframes happyEyes { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(0.75) translateY(3px); } }
+
+  .mouth { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 4px; height: 22px; }
+  .mouth i { width: 5px; border-radius: 3px; background: linear-gradient(180deg, var(--mg), var(--vi)); height: 3px;
+    box-shadow: 0 0 10px rgba(255,94,200,0.7); transition: height .2s; }
+  [data-state="speaking"] .mouth i        { animation: eq 0.42s ease-in-out infinite; }
+  [data-state="speaking"] .mouth i:nth-child(1) { animation-delay: 0s;    }
+  [data-state="speaking"] .mouth i:nth-child(2) { animation-delay: 0.10s; }
+  [data-state="speaking"] .mouth i:nth-child(3) { animation-delay: 0.05s; }
+  [data-state="speaking"] .mouth i:nth-child(4) { animation-delay: 0.16s; }
+  [data-state="speaking"] .mouth i:nth-child(5) { animation-delay: 0.08s; }
+  @keyframes eq { 0%,100% { height: 4px; } 50% { height: 20px; } }
+
+  .halo { position: absolute; top: -6px; right: 8px; width: 40px; height: 40px; border-radius: 50%;
+    border: 2px dotted var(--vi-dim); opacity: 0; transition: opacity .3s; animation: spin 3s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  [data-state="thinking"] .halo { opacity: 1; }
+
+  .cheek { position: absolute; bottom: 46px; width: 14px; height: 7px; border-radius: 50%; background: rgba(255,94,200,0.35); filter: blur(2px); }
+  .cheek.l { left: 22px; } .cheek.r { right: 22px; }
+
+  .statusword { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.34em; color: var(--vi-dim); text-transform: uppercase; margin-top: -6px; }
+
+  /* chat bubbles — soft, rounded, warm */
+  .feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; padding: 4px 2px; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .bub { max-width: 84%; padding: 11px 15px; font-size: 15px; line-height: 1.5; border-radius: 20px; }
+  .bub.kyo { align-self: flex-start; border-bottom-left-radius: 6px; color: var(--vi-hot);
+    background: linear-gradient(160deg, rgba(185,107,255,0.16), rgba(255,94,200,0.08));
+    border: 1px solid rgba(185,107,255,0.35); box-shadow: 0 4px 22px rgba(185,107,255,0.12); }
+  .bub.you { align-self: flex-end; border-bottom-right-radius: 6px; color: rgba(239,225,255,0.8);
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); }
+  .typing::after { content: '●'; font-size: 9px; margin-left: 4px; color: var(--mg); animation: pulse 0.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  .composer { display: flex; gap: 8px; align-items: center; padding: 12px 16px; border-radius: 24px;
+    background: rgba(20,10,42,0.75); border: 1.5px solid rgba(185,107,255,0.45);
+    box-shadow: 0 0 24px rgba(185,107,255,0.14); backdrop-filter: blur(12px); }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none;
+    color: var(--vi-hot); font-family: var(--display); font-size: 15px; caret-color: var(--mg); }
+  .composer input::placeholder { color: rgba(239,225,255,0.35); }
+  .composer button { border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: 0.04em; color: #180a2e;
+    background: linear-gradient(135deg, var(--vi-hot), var(--vi) 55%, var(--mg));
+    box-shadow: 0 4px 18px rgba(255,94,200,0.35); }
+  .composer button:active { transform: scale(0.96); }
+
+  .micline { display: grid; place-items: center; padding-top: 6px; }
+  .mic { width: 88px; height: 88px; border-radius: 32px; cursor: pointer; color: var(--vi);
+    background: radial-gradient(circle at 50% 34%, rgba(185,107,255,0.16), rgba(13,6,32,0.95) 72%);
+    border: 2px solid rgba(185,107,255,0.5); display: grid; place-items: center;
+    box-shadow: 0 0 26px rgba(185,107,255,0.22); transition: all .25s; }
+  .mic svg { width: 32px; height: 32px; filter: drop-shadow(0 0 8px rgba(185,107,255,0.7)); }
+  .mic:active { transform: scale(0.94); }
+  [data-state="listening"] .mic { color: #180a2e; border-color: var(--vi-hot);
+    background: linear-gradient(135deg, var(--vi-hot), var(--vi) 50%, var(--mg));
+    box-shadow: 0 0 60px rgba(255,94,200,0.55); animation: micBounce 1s ease-in-out infinite; }
+  @keyframes micBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  .miclabel { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.24em; color: var(--vi-dim); margin-top: 8px; text-transform: uppercase; }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding-top: 6px; }
+  .chips button { background: transparent; border: 1px solid var(--vi-faint); color: var(--vi-dim);
+    border-radius: 999px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; padding: 6px 12px; cursor: pointer; }
+  .chips button:hover, .chips button.on { border-color: var(--vi); color: var(--vi-hot); background: var(--vi-faint); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; color: rgba(239,225,255,0.4); padding-top: 8px; border-top: 1px solid rgba(185,107,255,0.14); }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <div class="brand">Kyo</div>
+      <div class="mood">mood: <b id="mood">easy</b></div>
+    </div>
+
+    <section class="stage" aria-label="Kyo sprite">
+      <div class="shadow"></div>
+      <div class="sprite">
+        <div class="antenna"></div>
+        <div class="head"></div>
+        <div class="halo"></div>
+        <div class="eyes"><div class="eye l"></div><div class="eye r"></div></div>
+        <div class="cheek l"></div><div class="cheek r"></div>
+        <div class="mouth"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </section>
+    <div class="statusword" id="status">idle — just hoverin'</div>
+
+    <section class="feed" id="feed">
+      <div class="bub kyo">Lawd... what're we fixin' today?</div>
+    </section>
+
+    <form class="composer" id="composer">
+      <input id="in" type="text" placeholder="Say somethin' to Kyo…" autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+
+    <div class="micline">
+      <button class="mic" id="mic" aria-label="Talk to Kyo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="miclabel" id="miclabel">tap to holler</div>
+
+    <div class="chips" aria-label="Demo states">
+      <button data-s="idle" class="on">idle</button>
+      <button data-s="listening">listen</button>
+      <button data-s="thinking">think</button>
+      <button data-s="speaking">speak</button>
+      <button id="demo">▶ run demo</button>
+    </div>
+
+    <div class="foot"><span>Kyo v0.2.3 — concept 3 «SPRITE»</span><span>digital familiar</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  const miclabel = document.getElementById('miclabel');
+  const mood = document.getElementById('mood');
+
+  const LABEL = { idle:'idle — just hoverin’', listening:'ears up — listenin’', thinking:'hmm… chewin’ on it', speaking:'yappin’' };
+  const MOODS = { idle:'easy', listening:'curious', thinking:'suspicious', speaking:'chatty' };
+  const MICL  = { idle:'tap to holler', listening:'listenin’ — tap to hush', thinking:'hold on now…', speaking:'hold on now…' };
+  function setState(s){
+    body.dataset.state = s;
+    status.textContent = LABEL[s];
+    mood.textContent = MOODS[s];
+    miclabel.textContent = MICL[s];
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+
+  function addBub(cls, text){
+    const d = document.createElement('div');
+    d.className = 'bub ' + cls; d.textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    let i = 0; el.classList.add('typing'); el.textContent = '';
+    (function tick(){
+      if (i < text.length) { el.textContent += text[i++]; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 24 + Math.random()*36); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "Well now... you sure that thing ain't listenin'?",
+    "That dog'll hunt. Gimme a tick to rig it up.",
+    "I reckon the machine's awake. Don't touch nothin'.",
+    "Shoot, that's easy. Even the toaster could do it — and I don't trust the toaster."
+  ];
+  let ri = 0;
+  function converse(userText){
+    addBub('you', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const b = addBub('kyo', '');
+      typeOut(b, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1500);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) hey kyo, you doin’ alright?'), 1800);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) run us a demo, kyo'), 1600);
+  });
+</script>
+</body>
+</html>

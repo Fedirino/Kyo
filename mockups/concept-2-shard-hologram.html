@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Kyo — Concept 2: SHARD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #020610;
+    --cy: #57d6ff;
+    --cy-hot: #eaf9ff;
+    --cy-deep: #0b66a3;
+    --cy-dim: rgba(87,214,255,0.5);
+    --cy-faint: rgba(87,214,255,0.12);
+    --warn: #ffb35c;
+    --hud: 'Orbitron', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --body: 'Space Grotesk', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(ellipse at 50% 18%, #06182b 0%, #03101f 45%, #010409 100%); color: #d9f2ff; font-family: var(--body); }
+  body { overflow: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 47px, rgba(87,214,255,0.05) 47px 48px),
+      repeating-linear-gradient(90deg, transparent 0 47px, rgba(87,214,255,0.04) 47px 48px);
+    mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%);
+  }
+
+  .app {
+    height: 100dvh; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom));
+    position: relative; z-index: 1;
+  }
+
+  .topline { display: flex; justify-content: space-between; align-items: baseline; }
+  .brand { font-family: var(--hud); font-weight: 700; font-size: 20px; letter-spacing: 0.34em; color: var(--cy-hot); text-shadow: 0 0 18px rgba(87,214,255,0.8); }
+  .brand small { font-size: 9px; letter-spacing: 0.3em; color: var(--cy-dim); display: block; margin-top: 2px; }
+  .tele { font-family: var(--mono); font-size: 9.5px; text-align: right; color: var(--cy-dim); line-height: 1.7; letter-spacing: 0.12em; }
+  .tele b { color: var(--cy); font-weight: 500; }
+
+  /* ===== KYO = CRYSTALLINE GYRO-CORE ===== */
+  .stage { position: relative; height: 240px; display: grid; place-items: center; perspective: 800px; }
+  .brk { position: absolute; width: 22px; height: 22px; border: 1.5px solid var(--cy-dim); }
+  .brk.tl { top: 4px; left: 4px; border-right: 0; border-bottom: 0; }
+  .brk.tr { top: 4px; right: 4px; border-left: 0; border-bottom: 0; }
+  .brk.bl { bottom: 4px; left: 4px; border-right: 0; border-top: 0; }
+  .brk.br { bottom: 4px; right: 4px; border-left: 0; border-top: 0; }
+
+  svg.tickring { position: absolute; width: 232px; height: 232px; animation: spin 26s linear infinite; opacity: 0.85; }
+  svg.tickring.r2 { width: 208px; height: 208px; animation: spinRev 17s linear infinite; opacity: 0.55; }
+  @keyframes spin    { to { transform: rotate(360deg); } }
+  @keyframes spinRev { to { transform: rotate(-360deg); } }
+
+  .gyro { width: 150px; height: 150px; position: relative; transform-style: preserve-3d; animation: gyro 14s linear infinite; }
+  @keyframes gyro { from { transform: rotateX(-16deg) rotateY(0deg); } to { transform: rotateX(-16deg) rotateY(360deg); } }
+  .plane {
+    position: absolute; inset: 0; border: 1.5px solid var(--cy-dim); border-radius: 4px;
+    box-shadow: 0 0 14px rgba(87,214,255,0.35), inset 0 0 14px rgba(87,214,255,0.12);
+    transition: border-color .3s;
+  }
+  .p1 { transform: rotateY(0deg); }
+  .p2 { transform: rotateY(60deg); }
+  .p3 { transform: rotateY(120deg); }
+  .p4 { transform: rotateX(90deg); border-style: dashed; opacity: 0.7; }
+
+  .shard {
+    position: absolute; inset: 0; display: grid; place-items: center; transform-style: preserve-3d;
+  }
+  .shard i {
+    position: absolute; width: 52px; height: 52px; background: linear-gradient(135deg, rgba(234,249,255,0.9), rgba(87,214,255,0.55) 55%, rgba(11,102,163,0.8));
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    filter: drop-shadow(0 0 16px rgba(87,214,255,0.9));
+    animation: shardIdle 4.2s ease-in-out infinite;
+  }
+  .shard i:nth-child(2) { transform: rotate(45deg) scale(0.72); opacity: 0.75; animation-delay: -1.2s; }
+  .shard i:nth-child(3) { transform: rotate(22deg) scale(1.28); opacity: 0.22; animation-delay: -2.1s; }
+  @keyframes shardIdle  { 0%,100% { scale: 0.96; } 50% { scale: 1.05; } }
+  @keyframes shardSpeak { 0%,100% { scale: 0.9; filter: drop-shadow(0 0 10px rgba(87,214,255,0.8)); } 50% { scale: 1.22; filter: drop-shadow(0 0 30px rgba(234,249,255,1)); } }
+  @keyframes shardThink { 0%,100% { rotate: 0deg; } 50% { rotate: 180deg; } }
+
+  /* state reactions */
+  [data-state="listening"] .gyro { animation-duration: 5s; }
+  [data-state="listening"] .plane { border-color: var(--cy-hot); }
+  [data-state="listening"] .stage .halo { opacity: 1; }
+  [data-state="thinking"]  .gyro { animation-duration: 30s; }
+  [data-state="thinking"]  .plane { border-style: dashed; }
+  [data-state="thinking"]  .shard i { animation: shardThink 2.4s ease-in-out infinite; }
+  [data-state="speaking"]  .shard i { animation: shardSpeak 0.46s ease-in-out infinite; }
+  [data-state="speaking"]  .gyro { animation-duration: 7s; }
+
+  .halo {
+    position: absolute; width: 168px; height: 168px; border-radius: 50%;
+    border: 1px solid rgba(87,214,255,0.7); opacity: 0; transition: opacity .3s;
+    animation: haloPing 1.6s ease-out infinite;
+  }
+  @keyframes haloPing { 0% { transform: scale(0.8); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+
+  .readout { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-family: var(--hud); font-size: 10px; letter-spacing: 0.5em; color: var(--cy); text-shadow: 0 0 12px rgba(87,214,255,0.8); white-space: nowrap; }
+
+  /* holo message panels */
+  .feed { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 2px; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .panel {
+    position: relative; max-width: 88%; padding: 10px 14px; font-size: 14.5px; line-height: 1.5;
+    background: linear-gradient(180deg, rgba(87,214,255,0.09), rgba(87,214,255,0.03));
+    border: 1px solid rgba(87,214,255,0.35);
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    backdrop-filter: blur(6px);
+  }
+  .panel.kyo { align-self: flex-start; color: var(--cy-hot); box-shadow: 0 0 22px rgba(87,214,255,0.12); }
+  .panel.kyo::before { content: 'KYO'; position: absolute; top: -8px; left: 10px; font-family: var(--hud); font-size: 8px; letter-spacing: 0.4em; color: var(--cy); background: #041322; padding: 1px 6px; }
+  .panel.you { align-self: flex-end; color: rgba(217,242,255,0.75); border-color: rgba(217,242,255,0.2); background: rgba(255,255,255,0.03); }
+  .typing::after { content: '▍'; color: var(--cy); animation: blink 0.8s steps(1) infinite; }
+  @keyframes blink { 0%,55% { opacity: 1; } 56%,100% { opacity: 0; } }
+
+  .composer {
+    display: flex; gap: 8px; align-items: center; padding: 11px 14px;
+    border: 1px solid rgba(87,214,255,0.4);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    background: rgba(4,19,34,0.7); backdrop-filter: blur(10px);
+  }
+  .composer input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--cy-hot); font-family: var(--body); font-size: 15px; caret-color: var(--cy); }
+  .composer input::placeholder { color: rgba(87,214,255,0.35); }
+  .composer button {
+    border: 0; padding: 7px 14px; cursor: pointer; font-family: var(--hud); font-size: 10px; letter-spacing: 0.24em;
+    color: #02121f; background: linear-gradient(135deg, var(--cy-hot), var(--cy) 60%, var(--cy-deep));
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+
+  .micline { display: grid; place-items: center; padding-top: 4px; }
+  .mic {
+    width: 84px; height: 84px; cursor: pointer; position: relative; color: var(--cy);
+    background: radial-gradient(circle at 50% 34%, rgba(87,214,255,0.16), rgba(2,10,18,0.9) 70%);
+    border: 1.5px solid rgba(87,214,255,0.55);
+    clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    display: grid; place-items: center; transition: all .25s;
+  }
+  .mic svg { width: 30px; height: 30px; filter: drop-shadow(0 0 8px rgba(87,214,255,0.8)); }
+  .mic:hover { border-color: var(--cy-hot); box-shadow: 0 0 34px rgba(87,214,255,0.35); }
+  [data-state="listening"] .mic { background: linear-gradient(135deg, var(--cy-hot), var(--cy) 55%, var(--cy-deep)); color: #02121f; box-shadow: 0 0 50px rgba(87,214,255,0.6); }
+  .miclabel { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.3em; color: var(--cy-dim); margin-top: 8px; }
+
+  .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding-top: 6px; }
+  .chips button {
+    background: transparent; border: 1px solid var(--cy-faint); color: var(--cy-dim);
+    font-family: var(--hud); font-size: 9px; letter-spacing: 0.24em; padding: 6px 10px; cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  }
+  .chips button:hover, .chips button.on { border-color: var(--cy); color: var(--cy-hot); background: var(--cy-faint); }
+
+  .foot { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; color: var(--cy-dim); border-top: 1px solid var(--cy-faint); padding-top: 8px; }
+  .foot .warn { color: var(--warn); }
+</style>
+</head>
+<body data-state="idle">
+  <main class="app">
+    <div class="topline">
+      <div class="brand">KYO<small>SHARD//CORE</small></div>
+      <div class="tele">
+        CORE <b id="core">98.2%</b> · TEMP <b>34°</b><br/>
+        LINK <b>HERMES</b> <span id="linkst">:: PENDING</span>
+      </div>
+    </div>
+
+    <section class="stage" aria-label="Kyo crystalline core">
+      <span class="brk tl"></span><span class="brk tr"></span><span class="brk bl"></span><span class="brk br"></span>
+      <svg class="tickring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(87,214,255,0.55)" stroke-width="0.8" stroke-dasharray="1 4.4"/></svg>
+      <svg class="tickring r2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="rgba(87,214,255,0.4)" stroke-width="2.4" stroke-dasharray="0.5 11.4"/></svg>
+      <div class="halo"></div>
+      <div class="gyro">
+        <div class="plane p1"></div>
+        <div class="plane p2"></div>
+        <div class="plane p3"></div>
+        <div class="plane p4"></div>
+      </div>
+      <div class="shard"><i></i><i></i><i></i></div>
+      <div class="readout" id="status">STANDBY</div>
+    </section>
+
+    <section class="feed" id="feed">
+      <div class="panel kyo">Lawd... what're we fixin' today?</div>
+    </section>
+
+    <form class="composer" id="composer">
+      <input id="in" type="text" placeholder="Transmit to Kyo…" autocomplete="off" />
+      <button type="submit">SEND</button>
+    </form>
+
+    <div class="micline">
+      <button class="mic" id="mic" aria-label="Talk to Kyo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="miclabel" id="miclabel">ENGAGE VOICE LINK</div>
+
+    <div class="chips" aria-label="Demo states">
+      <button data-s="idle" class="on">IDLE</button>
+      <button data-s="listening">LISTEN</button>
+      <button data-s="thinking">THINK</button>
+      <button data-s="speaking">SPEAK</button>
+      <button id="demo">▶ DEMO</button>
+    </div>
+
+    <div class="foot"><span>KYO v0.2.3 — CONCEPT 2 «SHARD»</span><span class="warn">HOLO-SAFE</span></div>
+  </main>
+
+<script>
+  const body = document.body;
+  const feed = document.getElementById('feed');
+  const status = document.getElementById('status');
+  const miclabel = document.getElementById('miclabel');
+  const linkst = document.getElementById('linkst');
+
+  const LABEL = { idle:'STANDBY', listening:'RECEIVING', thinking:'COMPUTING', speaking:'PROJECTING' };
+  const MICL  = { idle:'ENGAGE VOICE LINK', listening:'LINK OPEN — TAP TO CLOSE', thinking:'HOLD…', speaking:'HOLD…' };
+  function setState(s){
+    body.dataset.state = s;
+    status.textContent = LABEL[s];
+    miclabel.textContent = MICL[s];
+    linkst.textContent = s === 'idle' ? ':: PENDING' : ':: LIVE';
+    document.querySelectorAll('.chips [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s));
+  }
+
+  setInterval(() => {
+    document.getElementById('core').textContent = (96 + Math.random()*3.8).toFixed(1) + '%';
+  }, 1400);
+
+  function addPanel(cls, text){
+    const d = document.createElement('div');
+    d.className = 'panel ' + cls; d.textContent = text;
+    feed.appendChild(d); feed.scrollTop = feed.scrollHeight;
+    return d;
+  }
+  function typeOut(el, text, done){
+    let i = 0; el.classList.add('typing'); el.textContent = '';
+    (function tick(){
+      if (i < text.length) { el.textContent += text[i++]; feed.scrollTop = feed.scrollHeight; setTimeout(tick, 22 + Math.random()*34); }
+      else { el.classList.remove('typing'); done && done(); }
+    })();
+  }
+
+  const REPLIES = [
+    "Well now... you sure that thing ain't listenin'?",
+    "That dog'll hunt. Gimme a tick to rig it up.",
+    "I reckon the machine's awake. Don't touch nothin'.",
+    "Projection stable. Mostly. Don't breathe on it."
+  ];
+  let ri = 0;
+  function converse(userText){
+    addPanel('you', userText);
+    setState('thinking');
+    setTimeout(() => {
+      setState('speaking');
+      const p = addPanel('kyo', '');
+      typeOut(p, REPLIES[ri++ % REPLIES.length], () => setState('idle'));
+    }, 1400);
+  }
+
+  document.getElementById('composer').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('in').value.trim();
+    if (!v) return; document.getElementById('in').value = '';
+    converse(v);
+  });
+  document.getElementById('mic').addEventListener('click', () => {
+    if (body.dataset.state === 'listening') { setState('idle'); return; }
+    setState('listening');
+    setTimeout(() => converse('(voice) hey kyo, status report'), 1800);
+  });
+  document.querySelectorAll('.chips [data-s]').forEach(b =>
+    b.addEventListener('click', () => setState(b.dataset.s)));
+  document.getElementById('demo').addEventListener('click', () => {
+    setState('listening');
+    setTimeout(() => converse('(voice) run us a demo, kyo'), 1600);
+  });
+</script>
+</body>
+</html>
