@@ -904,7 +904,7 @@
     }
 
     function isWeatherQuestion(text) {
-      return /\b(weather|forecast|rain|snow|temperature|hot|cold|tomorrow|today|tonight|weekend)\b/i.test(text);
+      return /\b(weather|forecast|rain|snow|temperature|temp|degree|degrees|hot|cold|warm|cool|humid|windy|outside|outside\s+like|feels?\s+like|precipitation|rain\s+chance|tomorrow|today|tonight|weekend)\b/i.test(text);
     }
 
     function weatherReplyFor(text) {
