@@ -138,6 +138,17 @@
     .sheet .row button.primary { background: linear-gradient(120deg, var(--amber-hot), var(--amber) 60%, var(--amber-deep));
       color: #2b1204; border-color: transparent; font-weight: 700; box-shadow: 0 8px 22px rgba(224,92,26,0.3); }
     .small { font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+
+    /* ===== action toast ===== */
+    .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(12px);
+      display: flex; align-items: center; gap: 9px; padding: 10px 16px; border-radius: 999px;
+      background: rgba(20,17,20,0.92); border: 1px solid rgba(255,140,66,0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 24px rgba(224,92,26,0.14);
+      font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--amber-hot); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 20; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+      box-shadow: 0 0 10px rgba(255,140,66,0.9); animation: pipblink 0.8s ease-in-out infinite; flex: 0 0 auto; }
   </style>
 </head>
 <body data-state="idle">
@@ -189,6 +200,8 @@
     </div>
   </main>
 
+  <div class="toast" id="toast"><span class="dot" aria-hidden="true"></span><span id="toast-text"></span></div>
+
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Kyo settings">
     <h2>Settings</h2>
@@ -218,7 +231,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '0.3.1';
+    const APP_VERSION = '0.4.0';
 
     // ---------- state ----------
     const state = {
@@ -245,7 +258,12 @@
         "Acknowledge then act: 'On it.', 'Done.', 'One moment.' No filler, no corporate tone, no fake cheerfulness.",
         "Do not use markdown, lists, or emoji in spoken answers unless asked.",
         "You will eventually bridge to Nick's Hermes agent; it's fine to reference that future link when relevant.",
-        "The user is Nick (Fedirino). He works in management in retail produce, is learning Python and data analytics, and is building Clarity, Pulse, and Kyo. He prefers direct answers, clean modular code, real output over vague talk, and concise senior-dev-style help."
+        "The user is Nick (Fedirino). He works in management in retail produce, is learning Python and data analytics, and is building Clarity, Pulse, and Kyo. He prefers direct answers, clean modular code, real output over vague talk, and concise senior-dev-style help.",
+        "You can actually open things in the browser. When the user asks you to open a website, look something up on the web, or pull up a map/directions/location, end your reply with exactly one action tag on its own final line, in this exact format and nothing else on that line:",
+        "[ACTION:OPEN_URL|https://example.com] to open a specific site,",
+        "[ACTION:SEARCH|query terms] to run a web search,",
+        "[ACTION:MAP|place, address, or 'from X to Y'] to open a map or directions.",
+        "Only add a tag when the user is actually asking you to do one of these — not for general conversation. Keep the spoken part short and natural; never mention the tag itself, never describe it in words, just append it silently."
       ].join(' ');
     }
 
@@ -269,7 +287,9 @@
       saveBtn: document.getElementById('save-btn'),
       cancelBtn: document.getElementById('cancel-btn'),
       modelTag: document.getElementById('model-tag'),
-      verTag: document.getElementById('ver-tag')
+      verTag: document.getElementById('ver-tag'),
+      toast: document.getElementById('toast'),
+      toastText: document.getElementById('toast-text')
     };
 
     // ---------- ui ----------
@@ -560,6 +580,47 @@
       speechSynthesis.speak(utt);
     }
 
+    // ---------- actions ----------
+    let toastTimer = null;
+    function showToast(text) {
+      els.toastText.textContent = text;
+      els.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => els.toast.classList.remove('show'), 3200);
+    }
+
+    function parseAction(reply) {
+      const m = reply.match(/\[ACTION:(OPEN_URL|SEARCH|MAP)\|([^\]]+)\]\s*$/i);
+      if (!m) return { text: reply, action: null };
+      const text = reply.slice(0, m.index).trim();
+      return { text, action: { type: m[1].toUpperCase(), payload: m[2].trim() } };
+    }
+
+    function runAction(action) {
+      if (!action) return;
+      try {
+        if (action.type === 'OPEN_URL') {
+          let url = action.payload;
+          if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+          showToast('opening ' + new URL(url).hostname.replace(/^www\./, ''));
+          window.open(url, '_blank', 'noopener');
+        } else if (action.type === 'SEARCH') {
+          showToast('searching — ' + action.payload);
+          window.open('https://www.google.com/search?q=' + encodeURIComponent(action.payload), '_blank', 'noopener');
+        } else if (action.type === 'MAP') {
+          showToast('opening map — ' + action.payload);
+          const p = action.payload;
+          const toMatch = p.match(/^from\s+(.+?)\s+to\s+(.+)$/i);
+          const url = toMatch
+            ? 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(toMatch[1]) + '&destination=' + encodeURIComponent(toMatch[2])
+            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p);
+          window.open(url, '_blank', 'noopener');
+        }
+      } catch (e) {
+        console.warn('action failed', e);
+      }
+    }
+
     // ---------- chat ----------
     async function handleUser(text) {
       addLine('you', text);
@@ -571,10 +632,12 @@
       state.messages.push({ role: 'user', content: text });
       setMode('thinking');
       try {
-        const reply = await callOpenRouter();
-        state.messages.push({ role: 'assistant', content: reply });
-        addLine('kyo', reply);
-        speak(reply);
+        const raw = await callOpenRouter();
+        const { text: reply, action } = parseAction(raw);
+        state.messages.push({ role: 'assistant', content: raw });
+        addLine('kyo', reply || raw);
+        speak(reply || raw);
+        if (action) runAction(action);
       } catch (e) {
         setMode('idle');
         const msg = (e && e.message) ? e.message : 'Something went wrong.';

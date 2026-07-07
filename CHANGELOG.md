@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+- Kyo can now actually do things: open a website, run a web search, or pull up a map/directions, triggered straight from the conversation.
+- The model signals an action with a trailing tag it never speaks aloud (`[ACTION:OPEN_URL|...]`, `[ACTION:SEARCH|...]`, `[ACTION:MAP|...]`); Kyo strips it before displaying/speaking and opens the real destination (Google Search / Google Maps / direct URL) in a new tab.
+- Added a small amber HUD toast ("opening map — ...") that confirms what just launched, matching the Ember Core look.
+- Version and service worker cache bumped to 0.4.0.
+
 ## 0.3.1
 - Mic button redesign: replaced the glossy gradient sphere with a dense ember-particle corona (kin to the hero core's spike engine) behind the mic glyph. Flares brighter/faster while listening.
 - Design exploration for this pass archived under mockups/ (mic-options.html through mic-options-v6.html).
