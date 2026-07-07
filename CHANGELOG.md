@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1
+- Killed the default mobile blue tap-highlight on buttons/links; added a proper focus-visible ring for keyboard/accessibility use instead.
+- Mic button now clearly shows "on": filled amber background + brighter border while listening, plus an expanding pulse ring, on top of the existing corona and icon glow.
+- Map action now opens the real Google Maps app first (`comgooglemaps://`) and only falls back to the Maps website if the app doesn't actually open (desktop, or app not installed).
+
 ## 0.4.0
 - Kyo can now actually do things: open a website, run a web search, or pull up a map/directions, triggered straight from the conversation.
 - The model signals an action with a trailing tag it never speaks aloud (`[ACTION:OPEN_URL|...]`, `[ACTION:SEARCH|...]`, `[ACTION:MAP|...]`); Kyo strips it before displaying/speaking and opens the real destination (Google Search / Google Maps / direct URL) in a new tab.
