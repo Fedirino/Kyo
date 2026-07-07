@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Kyo</title>
+  <title>Winston</title>
   <meta name="theme-color" content="#0e0e11" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Kyo" />
+  <meta name="apple-mobile-web-app-title" content="Winston" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
@@ -239,14 +239,17 @@
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Winston settings">
     <h2>Settings</h2>
-    <label for="api-url">Hermes API Base URL</label>
-    <input id="api-url" type="text" placeholder="http://127.0.0.1:8642/v1" autocomplete="off" />
-    <label for="api-key">Hermes API Key</label>
-    <input id="api-key" type="password" placeholder="your-local-hermes-key" autocomplete="off" />
+    <label for="api-key">OpenRouter API Key</label>
+    <input id="api-key" type="password" placeholder="sk-or-..." autocomplete="off" />
     <label for="model">Model</label>
     <select id="model">
-      <option value="kyo">kyo — Hermes brain</option>
-      <option value="hermes-agent">hermes-agent — default profile model name</option>
+      <option value="xiaomi/mimo-v2.5">xiaomi/mimo-v2.5 — cheapest, fast</option>
+      <option value="google/gemini-2.5-flash-lite">google/gemini-2.5-flash-lite — cheap, reliable</option>
+      <option value="openai/gpt-5.4-nano">openai/gpt-5.4-nano — cheap, well-known</option>
+      <option value="qwen/qwen3.5-flash-02-23">qwen/qwen3.5-flash — cheap, multilingual</option>
+      <option value="deepseek/deepseek-chat">deepseek/deepseek-chat — strong general chat</option>
+      <option value="deepseek/deepseek-reasoner">deepseek/deepseek-reasoner — deeper reasoning</option>
+      <option value="openrouter/auto">openrouter/auto — let router choose</option>
     </select>
     <label for="eleven-key">ElevenLabs API Key</label>
     <input id="eleven-key" type="password" placeholder="sk_..." autocomplete="off" />
@@ -271,9 +274,8 @@
 
     // ---------- state ----------
     const state = {
-      apiUrl: localStorage.getItem('kyo.apiUrl') || 'http://127.0.0.1:8642/v1',
       apiKey: localStorage.getItem('kyo.apiKey') || '',
-      model: localStorage.getItem('kyo.model') || 'kyo',
+      model: localStorage.getItem('kyo.model') || 'xiaomi/mimo-v2.5',
       voiceName: localStorage.getItem('kyo.voice') || '',
       elevenKey: localStorage.getItem('kyo.elevenKey') || '',
       elevenVoice: localStorage.getItem('kyo.elevenVoice') || '',
@@ -318,7 +320,6 @@
       settingsBtn: document.getElementById('settings-btn'),
       scrim: document.getElementById('scrim'),
       sheet: document.getElementById('sheet'),
-      apiUrl: document.getElementById('api-url'),
       apiKey: document.getElementById('api-key'),
       model: document.getElementById('model'),
       elevenKey: document.getElementById('eleven-key'),
@@ -486,7 +487,6 @@
 
     // ---------- settings ----------
     function openSettings() {
-      els.apiUrl.value = state.apiUrl;
       els.apiKey.value = state.apiKey;
       els.model.value = state.model;
       els.elevenKey.value = state.elevenKey;
@@ -501,15 +501,13 @@
       els.sheet.classList.remove('open');
     }
     function saveSettings() {
-      state.apiUrl = (els.apiUrl.value.trim() || 'http://127.0.0.1:8642/v1').replace(/\/$/, '');
       state.apiKey = els.apiKey.value.trim();
-      state.model = els.model.value.trim() || 'kyo';
+      state.model = els.model.value;
       state.elevenKey = els.elevenKey.value.trim();
       state.elevenVoice = els.elevenVoice.value.trim();
       state.voiceName = els.voiceSel.value;
       const handsFreeWasOn = state.handsFree;
       state.handsFree = els.handsFree.value === '1';
-      localStorage.setItem('kyo.apiUrl', state.apiUrl);
       localStorage.setItem('kyo.apiKey', state.apiKey);
       localStorage.setItem('kyo.model', state.model);
       localStorage.setItem('kyo.elevenKey', state.elevenKey);
@@ -846,53 +844,49 @@
 
     // ---------- chat ----------
     async function handleUser(text) {
-   addLine('you', text);
-   if (!state.apiUrl) {
-     addLine('kyo', 'I need a Hermes API URL first — tap the gear to open settings.');
-     speak('Add your API URL in settings.');
-     return;
-   }
-   if (!state.apiKey) {
-     addLine('kyo', 'I need a Hermes API key first — tap the gear to open settings.');
-     speak('Add your API key in settings.');
-     return;
-   }
-   state.messages.push({ role: 'user', content: text });
-   setMode('thinking');
-   try {
-     const raw = await callHermes();
-     const { text: reply, action } = parseAction(raw);
-     state.messages.push({ role: 'assistant', content: raw });
-     addLine('kyo', reply || raw);
-     speak(reply || raw);
-     if (action) runAction(action);
-   } catch (e) {
-     setMode('idle');
-     const msg = (e && e.message) ? e.message : 'Something went wrong.';
-     addLine('kyo', 'Error: ' + msg);
-     speak('Something went wrong.');
-   }
- }
+      addLine('you', text);
+      if (!state.apiKey) {
+        addLine('kyo', 'I need an OpenRouter key first — tap the gear to open settings.');
+        speak('Add your key in settings.');
+        return;
+      }
+      state.messages.push({ role: 'user', content: text });
+      setMode('thinking');
+      try {
+        const raw = await callOpenRouter();
+        const { text: reply, action } = parseAction(raw);
+        state.messages.push({ role: 'assistant', content: raw });
+        addLine('kyo', reply || raw);
+        speak(reply || raw);
+        if (action) runAction(action);
+      } catch (e) {
+        setMode('idle');
+        const msg = (e && e.message) ? e.message : 'Something went wrong.';
+        addLine('kyo', 'Error: ' + msg);
+        speak('Something went wrong.');
+      }
+    }
 
-    async function callHermes() {
+    async function callOpenRouter() {
       const body = {
-        model: state.model || 'kyo',
+        model: state.model,
         messages: [state.messages[0], liveContext(), ...state.messages.slice(1)],
         max_tokens: 220,
         temperature: 0.6
       };
-      const baseUrl = state.apiUrl || 'http://127.0.0.1:8642/v1';
-      const res = await fetch(baseUrl.replace(/\/$/, '') + '/chat/completions', {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + state.apiKey,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'HTTP-Referer': location.origin,
+          'X-Title': 'Winston'
         },
         body: JSON.stringify(body)
       });
       if (!res.ok) {
         const t = await res.text().catch(() => '');
-        throw new Error('Hermes ' + res.status + ': ' + t.slice(0, 160));
+        throw new Error('OpenRouter ' + res.status + ': ' + t.slice(0, 160));
       }
       const data = await res.json();
       const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
