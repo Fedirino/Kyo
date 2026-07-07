@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1
+- Fixed a silent failure: if a browser doesn't support continuous speech recognition at all (Firefox has none, Safari's is limited), turning on hands-free used to just do nothing with zero feedback. It now shows a toast telling you it's not supported there and turns the setting back off, instead of looking broken.
+- Broadened wake-word matching — "Kyo" is an unusual word and speech engines often mishear it (Cairo, Kyoto, Kayo, etc.); those variants now trigger it too, and matching now checks interim results as well as final ones so it reacts faster.
+- Added a calibration aid: while hands-free is on and idle, any recognized phrase that doesn't match the wake word shows briefly as a toast ("heard: ...") so you can see exactly what the mic picked up and adjust how you say it.
+- Ambient recognition now restarts faster after a browser-forced stop (150ms vs 250ms) to shrink the gap where speech could be missed.
+
 ## 0.6.0
 - Added hands-free wake-word mode (Settings → Hands-Free Wake Word). When on, Kyo listens ambiently in the background for "hey Kyo" (or just "Kyo") and either acts immediately if a command followed in the same breath, or opens the mic for what comes next.
 - Ambient listening pauses automatically while Kyo is listening for a manual tap, thinking, or speaking — so it can't hear itself and loop. Whisper text under the mic reflects hands-free status when idle.

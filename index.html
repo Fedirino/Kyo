@@ -270,7 +270,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '0.6.0';
+    const APP_VERSION = '0.6.1';
 
     // ---------- state ----------
     const state = {
@@ -517,6 +517,16 @@
       els.modelTag.textContent = state.model;
       els.settingsBtn.classList.toggle('flag', !state.apiKey);
       closeSettings();
+      if (state.handsFree && !handsFreeWasOn) {
+        const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Ctor) {
+          showToast('this browser can\'t do hands-free listening');
+          state.handsFree = false;
+          localStorage.setItem('kyo.handsFree', '0');
+        } else {
+          showToast('hands-free on — say "hey kyo"');
+        }
+      }
       if (state.mode === 'idle') {
         els.whisper.textContent = state.handsFree ? 'say "hey kyo" — or tap' : WHISP.idle;
         if (state.handsFree && !handsFreeWasOn) startAmbient();
@@ -587,10 +597,12 @@
 
     // ---------- hands-free wake word ----------
     let ambientRec = null;
+    // "Kyo" is an unusual word for speech engines — cast a wide net for common mishearings.
+    const WAKE_RE = /\b(hey|hay|ok(ay)?|hi|yo)?\s*(kyo|kayo|kyoh|kaio|kio|cairo|kyoto|chiyo|geo|kiyo|kayoh)\b/i;
 
     function stripWakeWord(t) {
-      const m = t.match(/(?:hey|ok|okay|hi|yo)?\s*kyo[,:]?\s*(.*)$/i);
-      return m ? m[1].trim() : '';
+      const m = t.match(new RegExp(WAKE_RE.source + '[,:]?\\s*(.*)$', 'i'));
+      return m ? m[m.length - 1].trim() : '';
     }
 
     function startAmbient() {
@@ -603,16 +615,23 @@
       r.interimResults = true;
       r.maxAlternatives = 1;
       ambientRec = r;
+      let triggered = false;
       r.onresult = (ev) => {
+        if (triggered) return;
         for (let i = ev.resultIndex; i < ev.results.length; i++) {
           const res = ev.results[i];
-          if (!res.isFinal) continue;
           const t = res[0].transcript.trim();
-          if (!/\bkyo\b/i.test(t)) continue;
-          const cmd = stripWakeWord(t);
-          stopAmbient();
-          if (cmd) handleUser(cmd); else listen();
-          break;
+          if (!t) continue;
+          if (WAKE_RE.test(t)) {
+            triggered = true;
+            const cmd = stripWakeWord(t);
+            stopAmbient();
+            if (cmd) handleUser(cmd); else listen();
+            return;
+          } else if (res.isFinal) {
+            // calibration aid: shows what it actually heard when the wake word didn't match
+            showToast('heard: "' + t.slice(0, 44) + '"');
+          }
         }
       };
       r.onerror = (ev) => {
@@ -627,7 +646,7 @@
         const wasThis = ambientRec === r;
         ambientRec = null;
         if (wasThis && state.handsFree && state.mode === 'idle' && !state.listening) {
-          setTimeout(startAmbient, 250);
+          setTimeout(startAmbient, 150);
         }
       };
       try { r.start(); } catch (e) { ambientRec = null; }
