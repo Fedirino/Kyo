@@ -855,15 +855,17 @@
     }
 
     async function refreshWeather() {
-      if (!state.location) return;
+      if (!state.location) return false;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
       try {
         const { lat, lon } = state.location;
         const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
           '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&temperature_unit=fahrenheit&timezone=auto';
-        const res = await fetch(url);
-        if (!res.ok) return;
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) return false;
         const data = await res.json();
-        if (!data.current) return;
+        if (!data.current) return false;
         state.weather = {
           tempF: Math.round(data.current.temperature_2m),
           desc: WEATHER_CODES[data.current.weather_code] || 'unclear skies',
@@ -880,9 +882,15 @@
           lowF: Math.round(mins[idx]),
           desc: WEATHER_CODES[codes[idx]] || 'unclear skies'
         })).filter(item => Number.isFinite(item.highF) && Number.isFinite(item.lowF));
-      } catch (e) { /* stay silent, live context is best-effort */ }
+        return true;
+      } catch (e) {
+        return false;
+      } finally {
+        clearTimeout(timer);
+      }
     }
-    setInterval(refreshWeather, 15 * 60 * 1000);
+    refreshWeather().catch(() => {});
+    setInterval(() => refreshWeather().catch(() => {}), 15 * 60 * 1000);
 
     function liveContext() {
       const now = new Date();
@@ -904,7 +912,7 @@
     }
 
     function isWeatherQuestion(text) {
-      return /\b(weather|forecast|rain|snow|temperature|temp|degree|degrees|hot|cold|warm|cool|humid|windy|outside|outside\s+like|feels?\s+like|precipitation|rain\s+chance|tomorrow|today|tonight|weekend)\b/i.test(text);
+      return /\b(weather|forecast|rain|snow|temperature|temp|degree|degrees|hot|cold|warm|cool|humid|windy|outside|outside\s+like|feels?\s+like|precipitation|rain\s+chance|tomorrow|today|tonight|week|this\s+week|next\s+week|weekend)\b/i.test(text);
     }
 
     function weatherReplyFor(text) {
