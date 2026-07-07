@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kyo — Mic With Icon, Ember Style</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --amber: #ff8c42; --amber-hot: #ffc9a3; --amber-deep: #e05c1a;
+    --ink: #f5efe9; --dim: rgba(245,239,233,0.45); --hair: rgba(245,239,233,0.08);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; color: var(--ink); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 0%, #151317 0%, #0f0e12 45%, #0a0a0c 100%); }
+  body { padding: 40px 20px 80px; }
+  h1 { text-align: center; font-weight: 500; font-size: 20px; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .sub { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 48px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; max-width: 900px; margin: 0 auto; }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid var(--hair); border-radius: 20px;
+    padding: 34px 20px 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .card h2 { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; text-align: center; }
+  .card p { font-size: 12px; color: var(--dim); line-height: 1.5; text-align: center; margin: 0; max-width: 230px; }
+  .stagebox { height: 150px; display: grid; place-items: center; position: relative; }
+  .toggle { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim); background: transparent; border: 1px solid var(--hair); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; transition: all .2s; }
+  .toggle:hover { color: var(--amber); border-color: rgba(255,140,66,0.4); }
+  .toggle.on { color: var(--amber); border-color: rgba(255,140,66,0.5); background: rgba(255,140,66,0.08); }
+
+  .btnwrap { position: relative; width: 110px; height: 110px; display: grid; place-items: center; cursor: pointer; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .icon { position: relative; z-index: 3; width: 22px; height: 22px; color: var(--amber-hot);
+    filter: drop-shadow(0 0 6px rgba(255,140,66,0.5)); transition: filter .3s, color .3s; }
+  .btnwrap.on .icon { color: #fff5ec; filter: drop-shadow(0 0 12px rgba(255,140,66,0.85)); }
+
+  /* disc base shared under icon for options 2 & 3 */
+  .disc { position: absolute; width: 74px; height: 74px; border-radius: 50%;
+    background: linear-gradient(160deg, #1c181e, #100e12 70%);
+    box-shadow: inset 0 0 0 1px rgba(255,140,66,0.15), inset 0 -8px 16px rgba(0,0,0,0.4); z-index: 2; }
+</style>
+</head>
+<body>
+  <h1>Kyo — Mic With Icon, Ember Style</h1>
+  <div class="sub">keeps the mic glyph, wraps it in the core's material language — click to preview listening</div>
+  <div class="grid">
+
+    <div class="card">
+      <h2>7 · Ember-Ringed Mic</h2>
+      <div class="stagebox">
+        <div class="btnwrap" id="b1">
+          <canvas id="c1" width="220" height="220"></canvas>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p>Mic glyph sits at the center of a mini particle-spike ring, same as the "kin" cores but with the icon kept legible in the middle. Ring flares outward when listening.</p>
+      <button class="toggle" data-t="1">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>8 · Etched Rim-Light Mic</h2>
+      <div class="stagebox">
+        <div class="btnwrap" id="b2">
+          <div class="disc"></div>
+          <canvas id="c2" width="220" height="220"></canvas>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p>Dark matte disc, icon etched into the center; a thin amber line traces the rim like a light seam and brightens/rotates faster when listening. No glossy plastic, just a lit edge.</p>
+      <button class="toggle" data-t="2">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>9 · Circuit Mic</h2>
+      <div class="stagebox">
+        <div class="btnwrap" id="b3">
+          <div class="disc"></div>
+          <canvas id="c3" width="220" height="220"></canvas>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p>PCB-style traces radiate from the mic icon with small nodes along them, like the button is wired into the core. Nodes light up sequentially, faster and brighter when listening.</p>
+      <button class="toggle" data-t="3">TAP TO PREVIEW</button>
+    </div>
+
+  </div>
+
+  <script>
+    // ---------- 7: EMBER-RINGED MIC ----------
+    function emberRing(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      const PARTS = [];
+      for (let i=0;i<70;i++) {
+        PARTS.push({ ang: Math.random()*Math.PI*2, baseR: W*0.16 + (Math.random()-0.5)*W*0.03,
+          len: Math.random()<0.3 ? W*0.05+Math.random()*W*0.09 : W*0.012+Math.random()*W*0.03,
+          tw: 1.5+Math.random()*3.5, ph: Math.random()*Math.PI*2 });
+      }
+      let t=0, rot=0, listening=false;
+      function frame() {
+        t += 0.016; rot += listening ? 0.008 : 0.002;
+        const S = listening ? 1 : 0.4;
+        cx.clearRect(0,0,W,H);
+        for (const p of PARTS) {
+          const a = p.ang+rot;
+          const tw = 0.62+0.38*Math.sin(t*p.tw+p.ph);
+          const spike = p.len*S*tw+2;
+          const r0 = p.baseR, ca=Math.cos(a), sa=Math.sin(a);
+          const x0=CX+ca*r0, y0=CY+sa*r0;
+          const x1=CX+ca*(r0+spike), y1=CY+sa*(r0+spike);
+          cx.strokeStyle = 'rgba(224,92,26,' + (0.3+0.34*tw).toFixed(3) + ')';
+          cx.lineWidth = 1.4;
+          cx.beginPath(); cx.moveTo(x0,y0); cx.lineTo(x1,y1); cx.stroke();
+          cx.fillStyle = 'rgba(255,140,66,' + (0.35+0.45*tw).toFixed(3) + ')';
+          cx.beginPath(); cx.arc(x1,y1,1.2,0,6.29); cx.fill();
+        }
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    // ---------- 8: ETCHED RIM-LIGHT MIC ----------
+    function rimLight(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2, R = W*0.17;
+      let t=0, rot=0, listening=false;
+      function frame() {
+        t += 0.016; rot += listening ? 0.02 : 0.006;
+        cx.clearRect(0,0,W,H);
+        cx.strokeStyle = 'rgba(255,140,66,0.18)';
+        cx.lineWidth = W*0.012;
+        cx.beginPath(); cx.arc(CX,CY,R,0,6.29); cx.stroke();
+        const sweepLen = listening ? 1.4 : 0.9;
+        const a0 = rot;
+        const grad = cx.createLinearGradient(CX+Math.cos(a0)*R, CY+Math.sin(a0)*R, CX+Math.cos(a0+sweepLen)*R, CY+Math.sin(a0+sweepLen)*R);
+        grad.addColorStop(0,'rgba(255,201,163,0)');
+        grad.addColorStop(1,'rgba(255,180,110,' + (listening?0.95:0.7) + ')');
+        cx.strokeStyle = grad;
+        cx.lineWidth = W*0.014;
+        cx.beginPath(); cx.arc(CX,CY,R,a0,a0+sweepLen); cx.stroke();
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    // ---------- 9: CIRCUIT MIC ----------
+    function circuitMic(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      const TRACES = 6;
+      const traces = [];
+      for (let i=0;i<TRACES;i++) {
+        const a = (i/TRACES)*6.29 + (Math.random()-0.5)*0.3;
+        const bendA = a + (Math.random()-0.5)*0.6;
+        traces.push({ a, bendA, len1: W*0.09+Math.random()*W*0.02, len2: W*0.05+Math.random()*W*0.03, ph: Math.random() });
+      }
+      let t=0, listening=false;
+      function frame() {
+        t += 0.02;
+        cx.clearRect(0,0,W,H);
+        traces.forEach((tr, idx) => {
+          const x0 = CX+Math.cos(tr.a)*W*0.05, y0 = CY+Math.sin(tr.a)*W*0.05;
+          const x1 = CX+Math.cos(tr.a)*tr.len1, y1 = CY+Math.sin(tr.a)*tr.len1;
+          const x2 = x1+Math.cos(tr.bendA)*tr.len2, y2 = y1+Math.sin(tr.bendA)*tr.len2;
+          const cycle = (t*(listening?1.6:0.6) + tr.ph) % 1;
+          const active = listening ? 0.8 : 0.3;
+          cx.strokeStyle = 'rgba(224,92,26,' + active.toFixed(3) + ')';
+          cx.lineWidth = 1.2;
+          cx.beginPath(); cx.moveTo(x0,y0); cx.lineTo(x1,y1); cx.lineTo(x2,y2); cx.stroke();
+          // traveling pulse node
+          let px, py;
+          if (cycle < 0.5) { const f=cycle*2; px = x0+(x1-x0)*f; py = y0+(y1-y0)*f; }
+          else { const f=(cycle-0.5)*2; px = x1+(x2-x1)*f; py = y1+(y2-y1)*f; }
+          cx.fillStyle = 'rgba(255,201,163,' + (listening?0.95:0.6) + ')';
+          cx.beginPath(); cx.arc(px,py, listening?2.2:1.6, 0, 6.29); cx.fill();
+          cx.fillStyle = 'rgba(255,140,66,0.5)';
+          cx.beginPath(); cx.arc(x2,y2,1.6,0,6.29); cx.fill();
+        });
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    const cores = { 1: emberRing('c1'), 2: rimLight('c2'), 3: circuitMic('c3') };
+    document.querySelectorAll('.toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const n = btn.dataset.t;
+        const wasOn = btn.classList.contains('on');
+        cores[n].listening = !wasOn;
+        btn.classList.toggle('on');
+        document.getElementById('b'+n).classList.toggle('on', !wasOn);
+      });
+    });
+  </script>
+</body>
+</html>

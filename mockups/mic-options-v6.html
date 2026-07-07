@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kyo — Ember Ring, More Variations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --amber: #ff8c42; --amber-hot: #ffc9a3; --amber-deep: #e05c1a;
+    --ink: #f5efe9; --dim: rgba(245,239,233,0.45); --hair: rgba(245,239,233,0.08);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; color: var(--ink); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 0%, #151317 0%, #0f0e12 45%, #0a0a0c 100%); }
+  body { padding: 40px 20px 80px; }
+  h1 { text-align: center; font-weight: 500; font-size: 20px; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .sub { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 48px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; max-width: 900px; margin: 0 auto; }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid var(--hair); border-radius: 20px;
+    padding: 34px 20px 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .card h2 { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; text-align: center; }
+  .card p { font-size: 12px; color: var(--dim); line-height: 1.5; text-align: center; margin: 0; max-width: 230px; }
+  .stagebox { height: 150px; display: grid; place-items: center; position: relative; }
+  .toggle { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim); background: transparent; border: 1px solid var(--hair); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; transition: all .2s; }
+  .toggle:hover { color: var(--amber); border-color: rgba(255,140,66,0.4); }
+  .toggle.on { color: var(--amber); border-color: rgba(255,140,66,0.5); background: rgba(255,140,66,0.08); }
+
+  .btnwrap { position: relative; width: 120px; height: 120px; display: grid; place-items: center; cursor: pointer; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .icon { position: relative; z-index: 3; width: 22px; height: 22px; color: var(--amber-hot);
+    filter: drop-shadow(0 0 6px rgba(255,140,66,0.5)); transition: filter .3s, color .3s; }
+  .btnwrap.on .icon { color: #fff5ec; filter: drop-shadow(0 0 12px rgba(255,140,66,0.85)); }
+  .disc { position: absolute; width: 62px; height: 62px; border-radius: 50%;
+    background: linear-gradient(160deg, #1c181e, #100e12 70%);
+    box-shadow: inset 0 0 0 1px rgba(255,140,66,0.12), inset 0 -8px 14px rgba(0,0,0,0.4); z-index: 2; }
+</style>
+</head>
+<body>
+  <h1>Kyo — Ember Ring, More Variations</h1>
+  <div class="sub">building on the ember-ringed mic — click to preview listening</div>
+  <div class="grid">
+
+    <div class="card">
+      <h2>10 · Dense Corona</h2>
+      <div class="stagebox">
+        <div class="btnwrap" id="b1">
+          <canvas id="c1" width="220" height="220"></canvas>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p>Tighter radius, denser spike field for a full corona of light around the icon rather than a sparse ring. Rest state already feels lit; listening pushes it into a solar-flare burst.</p>
+      <button class="toggle" data-t="1">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>11 · Dual Counter-Ring</h2>
+      <div class="stagebox">
+        <div class="btnwrap" id="b2">
+          <canvas id="c2" width="220" height="220"></canvas>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p>Two ember-spike rings at different radii, rotating in opposite directions — adds parallax depth. Outer ring only lights up once listening starts.</p>
+      <button class="toggle" data-t="2">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>12 · Ember Ring on Glass</h2>
+      <div class="stagebox">
+        <div class="btnwrap" id="b3">
+          <div class="disc"></div>
+          <canvas id="c3" width="220" height="220"></canvas>
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p>Same spike ring, but the icon sits on a small dark glass disc instead of floating bare — a bit more of a tactile "button" feel for anyone worried the bare ring reads as decoration only.</p>
+      <button class="toggle" data-t="3">TAP TO PREVIEW</button>
+    </div>
+
+  </div>
+
+  <script>
+    function makeRing(id, opts) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      const o = Object.assign({ count: 70, baseR: 0.16, spikeMin: 0.012, spikeMax: 0.03, bigSpikeMin: 0.05, bigSpikeMax: 0.09, bigChance: 0.3, rotSpeedIdle: 0.002, rotSpeedListen: 0.008, dir: 1 }, opts);
+      const PARTS = [];
+      for (let i=0;i<o.count;i++) {
+        PARTS.push({ ang: Math.random()*Math.PI*2, baseR: W*o.baseR + (Math.random()-0.5)*W*0.03,
+          len: Math.random()<o.bigChance ? W*o.bigSpikeMin+Math.random()*(W*(o.bigSpikeMax-o.bigSpikeMin)) : W*o.spikeMin+Math.random()*(W*(o.spikeMax-o.spikeMin)),
+          tw: 1.5+Math.random()*3.5, ph: Math.random()*Math.PI*2 });
+      }
+      let t=0, rot=0, listening=false;
+      function frame() {
+        t += 0.016; rot += (listening ? o.rotSpeedListen : o.rotSpeedIdle) * o.dir;
+        const S = listening ? 1 : 0.4;
+        cx.clearRect(0,0,W,H);
+        for (const p of PARTS) {
+          const a = p.ang+rot;
+          const tw = 0.62+0.38*Math.sin(t*p.tw+p.ph);
+          const spike = p.len*S*tw+2;
+          const r0 = p.baseR, ca=Math.cos(a), sa=Math.sin(a);
+          const x0=CX+ca*r0, y0=CY+sa*r0;
+          const x1=CX+ca*(r0+spike), y1=CY+sa*(r0+spike);
+          cx.strokeStyle = 'rgba(224,92,26,' + (0.3+0.34*tw).toFixed(3) + ')';
+          cx.lineWidth = 1.4;
+          cx.beginPath(); cx.moveTo(x0,y0); cx.lineTo(x1,y1); cx.stroke();
+          cx.fillStyle = 'rgba(255,140,66,' + (0.35+0.45*tw).toFixed(3) + ')';
+          cx.beginPath(); cx.arc(x1,y1,1.2,0,6.29); cx.fill();
+        }
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    function dualRing(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      function build(count, baseR, spikeMinF, spikeMaxF) {
+        const arr = [];
+        for (let i=0;i<count;i++) arr.push({ ang: Math.random()*Math.PI*2, baseR: W*baseR+(Math.random()-0.5)*W*0.02,
+          len: W*spikeMinF+Math.random()*W*(spikeMaxF-spikeMinF), tw: 1.5+Math.random()*3.5, ph: Math.random()*Math.PI*2 });
+        return arr;
+      }
+      const inner = build(50, 0.13, 0.012, 0.03);
+      const outer = build(60, 0.20, 0.015, 0.045);
+      let t=0, rotA=0, rotB=0, listening=false;
+      function frame() {
+        t += 0.016; rotA += listening ? 0.007 : 0.002; rotB -= listening ? 0.005 : 0.0012;
+        const S = listening ? 1 : 0.4;
+        cx.clearRect(0,0,W,H);
+        function drawRing(parts, rot, alphaMul) {
+          for (const p of parts) {
+            const a = p.ang+rot;
+            const tw = 0.62+0.38*Math.sin(t*p.tw+p.ph);
+            const spike = p.len*S*tw+2;
+            const r0 = p.baseR, ca=Math.cos(a), sa=Math.sin(a);
+            const x0=CX+ca*r0, y0=CY+sa*r0;
+            const x1=CX+ca*(r0+spike), y1=CY+sa*(r0+spike);
+            cx.strokeStyle = 'rgba(224,92,26,' + ((0.3+0.34*tw)*alphaMul).toFixed(3) + ')';
+            cx.lineWidth = 1.3;
+            cx.beginPath(); cx.moveTo(x0,y0); cx.lineTo(x1,y1); cx.stroke();
+            cx.fillStyle = 'rgba(255,140,66,' + ((0.35+0.45*tw)*alphaMul).toFixed(3) + ')';
+            cx.beginPath(); cx.arc(x1,y1,1.1,0,6.29); cx.fill();
+          }
+        }
+        drawRing(inner, rotA, 1);
+        drawRing(outer, rotB, listening ? 1 : 0.15);
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    const cores = {
+      1: makeRing('c1', { count: 110, baseR: 0.13, spikeMin: 0.008, spikeMax: 0.02, bigSpikeMin: 0.03, bigSpikeMax: 0.06, bigChance: 0.35 }),
+      2: dualRing('c2'),
+      3: makeRing('c3', { count: 70, baseR: 0.17, dir: -1 })
+    };
+    document.querySelectorAll('.toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const n = btn.dataset.t;
+        const wasOn = btn.classList.contains('on');
+        cores[n].listening = !wasOn;
+        btn.classList.toggle('on');
+        document.getElementById('b'+n).classList.toggle('on', !wasOn);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+- Mic button redesign: replaced the glossy gradient sphere with a dense ember-particle corona (kin to the hero core's spike engine) behind the mic glyph. Flares brighter/faster while listening.
+- Design exploration for this pass archived under mockups/ (mic-options.html through mic-options-v6.html).
+- Version and service worker cache bumped to 0.3.1.
+
 ## 0.3.0
 - Full visual redesign: EMBER MINIMAL. Living particle-burst core (canvas) replaces the orb — flares when listening, contracts and swirls when thinking, pulses while speaking.
 - New warm ember palette (orange on graphite) replacing neon green; glossy mic button; hairline-only UI.

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kyo — Mic as Mini-Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --amber: #ff8c42; --amber-hot: #ffc9a3; --amber-deep: #e05c1a;
+    --ink: #f5efe9; --dim: rgba(245,239,233,0.45); --hair: rgba(245,239,233,0.08);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; color: var(--ink); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 0%, #151317 0%, #0f0e12 45%, #0a0a0c 100%); }
+  body { padding: 40px 20px 80px; }
+  h1 { text-align: center; font-weight: 500; font-size: 20px; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .sub { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 48px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; max-width: 900px; margin: 0 auto; }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid var(--hair); border-radius: 20px;
+    padding: 34px 20px 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .card h2 { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; text-align: center; }
+  .card p { font-size: 12px; color: var(--dim); line-height: 1.5; text-align: center; margin: 0; max-width: 230px; }
+  .stagebox { height: 150px; display: grid; place-items: center; position: relative; }
+  .toggle { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim); background: transparent; border: 1px solid var(--hair); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; transition: all .2s; }
+  .toggle:hover { color: var(--amber); border-color: rgba(255,140,66,0.4); }
+  .toggle.on { color: var(--amber); border-color: rgba(255,140,66,0.5); background: rgba(255,140,66,0.08); }
+
+  .orbit { position: absolute; border-radius: 50%; border: 1px solid rgba(255,140,66,0.1); }
+  .capsule { position: absolute; border-radius: 50%; background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.005));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 -10px 18px rgba(0,0,0,0.3); }
+  canvas { position: relative; z-index: 2; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>Kyo — Mic as Mini-Core</h1>
+  <div class="sub">the button IS a small ember core, same particle system as the big one · click to preview listening</div>
+  <div class="grid">
+
+    <div class="card">
+      <h2>1 · Bare Core</h2>
+      <div class="stagebox">
+        <canvas id="c1" width="220" height="220" style="width:110px;height:110px"></canvas>
+      </div>
+      <p>Exact same particle-spike engine as the hero core, just smaller — no ring, no glass, no icon. The core itself is the button, floating.</p>
+      <button class="toggle" data-t="1">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>2 · Core in Capsule</h2>
+      <div class="stagebox">
+        <div class="capsule" style="width:130px;height:130px"></div>
+        <canvas id="c2" width="220" height="220" style="width:100px;height:100px"></canvas>
+      </div>
+      <p>Same mini-core, sitting inside a frosted glass capsule so it still reads as a tappable button, not just ambient decoration.</p>
+      <button class="toggle" data-t="2">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>3 · Core + Orbit Ring</h2>
+      <div class="stagebox">
+        <div class="orbit" style="width:140px;height:140px"></div>
+        <canvas id="c3" width="220" height="220" style="width:104px;height:104px"></canvas>
+      </div>
+      <p>Mirrors the hairline orbit ring around the hero core — ties the mic directly to the main visual as a smaller sibling of the same object.</p>
+      <button class="toggle" data-t="3">TAP TO PREVIEW</button>
+    </div>
+
+  </div>
+
+  <script>
+    // exact same particle-spike engine as index.html's core, parameterized per-canvas
+    function makeCore(id, particleCount) {
+      const cv = document.getElementById(id);
+      const cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      const PARTS = [];
+      for (let i = 0; i < particleCount; i++) {
+        PARTS.push({
+          ang: Math.random() * Math.PI * 2,
+          baseR: (W*0.16) + (Math.random()-0.5) * (W*0.04),
+          len: Math.random() < 0.28 ? (W*0.08) + Math.random()*(W*0.16) : (W*0.014)+Math.random()*(W*0.05),
+          tw: 1.5 + Math.random()*3.5,
+          ph: Math.random()*Math.PI*2
+        });
+      }
+      let coreTime = 0, coreRot = 0, listening = false;
+      function frame() {
+        coreTime += 0.016;
+        coreRot += listening ? 0.0032 : 0.0012;
+        let S = listening ? 1.0 : 0.42;
+        cx.clearRect(0,0,W,H);
+        const g = cx.createRadialGradient(CX,CY,W*0.03,CX,CY,W*0.2);
+        g.addColorStop(0,'rgba(255,140,66,0.12)');
+        g.addColorStop(1,'rgba(255,140,66,0)');
+        cx.fillStyle = g;
+        cx.beginPath(); cx.arc(CX,CY,W*0.2,0,6.29); cx.fill();
+        for (const p of PARTS) {
+          const a = p.ang + coreRot;
+          const tw = 0.62 + 0.38*Math.sin(coreTime*p.tw + p.ph);
+          const spike = p.len * S * tw + 2;
+          const r0 = p.baseR;
+          const ca = Math.cos(a), sa = Math.sin(a);
+          const x0 = CX+ca*r0, y0 = CY+sa*r0*0.96;
+          const x1 = CX+ca*(r0+spike), y1 = CY+sa*(r0+spike)*0.96;
+          cx.strokeStyle = 'rgba(224,92,26,' + (0.30+0.34*tw).toFixed(3) + ')';
+          cx.lineWidth = Math.max(1, W*0.007);
+          cx.beginPath(); cx.moveTo(x0,y0); cx.lineTo(x1,y1); cx.stroke();
+          cx.fillStyle = 'rgba(255,201,163,' + (0.5+0.5*tw).toFixed(3) + ')';
+          cx.beginPath(); cx.arc(x0,y0,W*0.008,0,6.29); cx.fill();
+          cx.fillStyle = 'rgba(255,140,66,' + (0.35+0.45*tw).toFixed(3) + ')';
+          cx.beginPath(); cx.arc(x1,y1,W*0.006,0,6.29); cx.fill();
+        }
+        cx.strokeStyle = 'rgba(255,201,163,0.28)';
+        cx.lineWidth = 1;
+        cx.beginPath(); cx.arc(CX,CY,W*0.14,0,6.29); cx.stroke();
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v) { listening = v; }, get listening() { return listening; } };
+    }
+    const cores = { 1: makeCore('c1', 120), 2: makeCore('c2', 100), 3: makeCore('c3', 100) };
+    document.querySelectorAll('.toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const n = btn.dataset.t;
+        cores[n].listening = !cores[n].listening;
+        btn.classList.toggle('on');
+      });
+    });
+  </script>
+</body>
+</html>

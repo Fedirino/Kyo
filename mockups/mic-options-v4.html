@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kyo — Mic, More Kin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --amber: #ff8c42; --amber-hot: #ffc9a3; --amber-deep: #e05c1a;
+    --ink: #f5efe9; --dim: rgba(245,239,233,0.45); --hair: rgba(245,239,233,0.08);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; color: var(--ink); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 0%, #151317 0%, #0f0e12 45%, #0a0a0c 100%); }
+  body { padding: 40px 20px 80px; }
+  h1 { text-align: center; font-weight: 500; font-size: 20px; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .sub { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 48px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; max-width: 900px; margin: 0 auto; }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid var(--hair); border-radius: 20px;
+    padding: 34px 20px 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .card h2 { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; text-align: center; }
+  .card p { font-size: 12px; color: var(--dim); line-height: 1.5; text-align: center; margin: 0; max-width: 230px; }
+  .stagebox { height: 150px; display: grid; place-items: center; position: relative; }
+  .toggle { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim); background: transparent; border: 1px solid var(--hair); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; transition: all .2s; }
+  .toggle:hover { color: var(--amber); border-color: rgba(255,140,66,0.4); }
+  .toggle.on { color: var(--amber); border-color: rgba(255,140,66,0.5); background: rgba(255,140,66,0.08); }
+  canvas { position: relative; z-index: 2; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>Kyo — Mic, More Kin of the Core</h1>
+  <div class="sub">same amber-on-graphite material, three more distinct motions — click to preview listening</div>
+  <div class="grid">
+
+    <div class="card">
+      <h2>4 · Iris Aperture</h2>
+      <div class="stagebox">
+        <canvas id="c1" width="220" height="220" style="width:110px;height:110px"></canvas>
+      </div>
+      <p>Mechanical camera-iris blades ring the center, breathing narrower at rest and snapping open when listening — reads as an optical sensor waking up, not a mic.</p>
+      <button class="toggle" data-t="1">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>5 · Molten Ring</h2>
+      <div class="stagebox">
+        <canvas id="c2" width="220" height="220" style="width:110px;height:110px"></canvas>
+      </div>
+      <p>A thick liquid-looking band of light that ripples unevenly around the center, like molten metal held in a ring. Turns turbulent and brighter when listening.</p>
+      <button class="toggle" data-t="2">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card">
+      <h2>6 · Orbit Dial</h2>
+      <div class="stagebox">
+        <canvas id="c3" width="220" height="220" style="width:110px;height:110px"></canvas>
+      </div>
+      <p>Two or three thin concentric rings spinning at different speeds with a single tracking tick each, like a gyroscope/HUD dial. Rings accelerate and a third ring appears when listening.</p>
+      <button class="toggle" data-t="3">TAP TO PREVIEW</button>
+    </div>
+
+  </div>
+
+  <script>
+    // ---------- 4: IRIS APERTURE ----------
+    function irisAperture(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      const BLADES = 10, R = W*0.17;
+      let t=0, listening=false;
+      function frame() {
+        t += 0.016;
+        const openAmt = listening ? 0.85 : 0.45 + Math.sin(t*1.2)*0.06;
+        cx.clearRect(0,0,W,H);
+        const g = cx.createRadialGradient(CX,CY,W*0.02,CX,CY,W*0.22);
+        g.addColorStop(0,'rgba(255,140,66,' + (listening?0.16:0.08) + ')'); g.addColorStop(1,'rgba(255,140,66,0)');
+        cx.fillStyle = g; cx.beginPath(); cx.arc(CX,CY,W*0.22,0,6.29); cx.fill();
+        for (let i=0;i<BLADES;i++) {
+          const a0 = (i/BLADES)*6.29 + t*(listening?0.15:0.05);
+          const innerR = R * (1-openAmt) * 0.5;
+          const outerR = R;
+          const spread = (6.29/BLADES) * 0.72;
+          cx.beginPath();
+          cx.moveTo(CX + Math.cos(a0)*innerR, CY + Math.sin(a0)*innerR);
+          cx.lineTo(CX + Math.cos(a0)*outerR, CY + Math.sin(a0)*outerR);
+          cx.lineTo(CX + Math.cos(a0+spread)*outerR, CY + Math.sin(a0+spread)*outerR);
+          cx.lineTo(CX + Math.cos(a0+spread)*innerR, CY + Math.sin(a0+spread)*innerR);
+          cx.closePath();
+          cx.fillStyle = 'rgba(224,92,26,' + (listening?0.5:0.3) + ')';
+          cx.fill();
+          cx.strokeStyle = 'rgba(255,201,163,' + (listening?0.6:0.35) + ')';
+          cx.lineWidth = 1;
+          cx.stroke();
+        }
+        cx.fillStyle = 'rgba(255,201,163,' + (listening?0.6:0.4) + ')';
+        cx.beginPath(); cx.arc(CX,CY, R*(1-openAmt)*0.5*0.7, 0, 6.29); cx.fill();
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    // ---------- 5: MOLTEN RING ----------
+    function moltenRing(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2, R = W*0.15;
+      const PTS = 48;
+      let t=0, listening=false;
+      function frame() {
+        t += 0.016;
+        cx.clearRect(0,0,W,H);
+        const g = cx.createRadialGradient(CX,CY,W*0.03,CX,CY,W*0.2);
+        g.addColorStop(0,'rgba(255,140,66,0.1)'); g.addColorStop(1,'rgba(255,140,66,0)');
+        cx.fillStyle = g; cx.beginPath(); cx.arc(CX,CY,W*0.2,0,6.29); cx.fill();
+        const amp = listening ? W*0.028 : W*0.01;
+        const speed = listening ? 3.2 : 1;
+        cx.beginPath();
+        for (let i=0;i<=PTS;i++) {
+          const a = (i/PTS)*6.29;
+          const wob = Math.sin(a*3 + t*speed) * amp + Math.sin(a*5 - t*speed*1.4)*amp*0.5;
+          const r = R + wob;
+          const x = CX+Math.cos(a)*r, y = CY+Math.sin(a)*r;
+          if (i===0) cx.moveTo(x,y); else cx.lineTo(x,y);
+        }
+        cx.closePath();
+        cx.strokeStyle = 'rgba(255,140,66,' + (listening?0.85:0.55) + ')';
+        cx.lineWidth = listening ? W*0.028 : W*0.02;
+        cx.shadowColor = 'rgba(255,140,66,0.6)';
+        cx.shadowBlur = listening ? 14 : 6;
+        cx.stroke();
+        cx.shadowBlur = 0;
+        cx.fillStyle = 'rgba(255,201,163,' + (listening?0.5:0.3) + ')';
+        cx.beginPath(); cx.arc(CX,CY,W*0.015,0,6.29); cx.fill();
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    // ---------- 6: ORBIT DIAL ----------
+    function orbitDial(id) {
+      const cv = document.getElementById(id), cx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, CX = W/2, CY = H/2;
+      let t=0, listening=false;
+      function frame() {
+        t += 0.016;
+        cx.clearRect(0,0,W,H);
+        const g = cx.createRadialGradient(CX,CY,W*0.02,CX,CY,W*0.22);
+        g.addColorStop(0,'rgba(255,140,66,0.08)'); g.addColorStop(1,'rgba(255,140,66,0)');
+        cx.fillStyle = g; cx.beginPath(); cx.arc(CX,CY,W*0.22,0,6.29); cx.fill();
+
+        const rings = listening ? [
+          { r: W*0.08, speed: 0.02, w: 1.2 },
+          { r: W*0.13, speed: -0.03, w: 1.2 },
+          { r: W*0.18, speed: 0.045, w: 1.4 }
+        ] : [
+          { r: W*0.08, speed: 0.006, w: 1 },
+          { r: W*0.13, speed: -0.009, w: 1 }
+        ];
+        for (const ring of rings) {
+          const a = t * (ring.speed*60);
+          cx.strokeStyle = 'rgba(255,140,66,0.22)';
+          cx.lineWidth = ring.w;
+          cx.beginPath(); cx.arc(CX,CY,ring.r,0,6.29); cx.stroke();
+          const tickA = a;
+          const tx = CX+Math.cos(tickA)*ring.r, ty = CY+Math.sin(tickA)*ring.r;
+          cx.fillStyle = 'rgba(255,201,163,' + (listening?0.9:0.6) + ')';
+          cx.beginPath(); cx.arc(tx,ty, listening?2.6:2, 0, 6.29); cx.fill();
+        }
+        cx.fillStyle = 'rgba(255,201,163,' + (listening?0.6:0.4) + ')';
+        cx.beginPath(); cx.arc(CX,CY, W*0.02*(listening?1.3:1), 0, 6.29); cx.fill();
+        requestAnimationFrame(frame);
+      }
+      frame();
+      return { set listening(v){ listening=v; } };
+    }
+
+    const cores = { 1: irisAperture('c1'), 2: moltenRing('c2'), 3: orbitDial('c3') };
+    document.querySelectorAll('.toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const n = btn.dataset.t;
+        const wasOn = btn.classList.contains('on');
+        cores[n].listening = !wasOn;
+        btn.classList.toggle('on');
+      });
+    });
+  </script>
+</body>
+</html>

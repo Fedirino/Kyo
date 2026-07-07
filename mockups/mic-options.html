@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kyo — Mic Button Options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --amber: #ff8c42;
+    --amber-hot: #ffc9a3;
+    --amber-deep: #e05c1a;
+    --ink: #f5efe9;
+    --dim: rgba(245,239,233,0.45);
+    --hair: rgba(245,239,233,0.08);
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; color: var(--ink); font-family: var(--display);
+    background: radial-gradient(ellipse at 50% 0%, #151317 0%, #0f0e12 45%, #0a0a0c 100%); }
+  body { padding: 40px 20px 80px; }
+  h1 { text-align: center; font-weight: 500; font-size: 20px; letter-spacing: 0.06em; margin: 0 0 6px; }
+  .sub { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 48px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; max-width: 1100px; margin: 0 auto; }
+  .card { background: rgba(255,255,255,0.02); border: 1px solid var(--hair); border-radius: 20px;
+    padding: 34px 20px 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .card h2 { font-size: 13px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; text-align: center; }
+  .card p { font-size: 12px; color: var(--dim); line-height: 1.5; text-align: center; margin: 0; max-width: 220px; }
+  .stagebox { height: 130px; display: grid; place-items: center; }
+  .toggle { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim); background: transparent; border: 1px solid var(--hair); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; transition: all .2s; }
+  .toggle:hover { color: var(--amber); border-color: rgba(255,140,66,0.4); }
+  .toggle.on { color: var(--amber); border-color: rgba(255,140,66,0.5); background: rgba(255,140,66,0.08); }
+
+  /* ---------- OPTION 1: RADAR RING ---------- */
+  .mic1 { position: relative; width: 84px; height: 84px; border-radius: 50%; border: 0; cursor: pointer;
+    background: #16141a; display: grid; place-items: center; }
+  .mic1::before, .mic1::after { content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 1px solid rgba(255,140,66,0.25); }
+  .mic1::after { inset: -10px; border-color: rgba(255,140,66,0.12); }
+  .mic1 .ticks { position: absolute; inset: -18px; border-radius: 50%; }
+  .mic1 .ticks span { position: absolute; width: 2px; height: 6px; background: rgba(255,140,66,0.3); left: 50%; top: 0;
+    transform-origin: 1px 60px; }
+  .mic1 svg { width: 26px; height: 26px; color: var(--amber-hot); z-index: 2; filter: drop-shadow(0 0 8px rgba(255,140,66,0.6)); }
+  .mic1 .sweep { position: absolute; inset: -18px; border-radius: 50%; opacity: 0; }
+  .card1.on .mic1 .sweep { opacity: 1; background: conic-gradient(from 0deg, rgba(255,140,66,0.5), transparent 30%);
+    animation: spin 1.8s linear infinite; }
+  .card1.on .mic1::before { border-color: rgba(255,140,66,0.7); box-shadow: 0 0 24px rgba(255,140,66,0.5); }
+  .card1.on .mic1 svg { color: var(--amber); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- OPTION 2: LIQUID GLASS CORE ---------- */
+  .mic2 { position: relative; width: 86px; height: 86px; border-radius: 50%; border: 0; cursor: pointer;
+    background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+    backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08),
+    inset 0 -14px 26px rgba(0,0,0,0.35), 0 20px 40px rgba(0,0,0,0.4); display: grid; place-items: center;
+    transition: box-shadow .4s; }
+  .mic2 .glow { position: absolute; width: 46px; height: 46px; border-radius: 50%;
+    background: radial-gradient(circle, var(--amber-hot), var(--amber) 55%, transparent 75%);
+    filter: blur(2px); opacity: 0.85; transition: all .4s; }
+  .mic2 svg { position: relative; width: 24px; height: 24px; color: #fff8f0; z-index: 2;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5)); }
+  .card2.on .mic2 { box-shadow: inset 0 0 0 1px rgba(255,180,120,0.35), inset 0 -10px 20px rgba(0,0,0,0.3),
+    0 0 60px rgba(255,140,66,0.55); }
+  .card2.on .mic2 .glow { width: 66px; height: 66px; animation: breathe 1.3s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.12); opacity: 1; } }
+
+  /* ---------- OPTION 3: FACETED HUD BEZEL ---------- */
+  .mic3wrap { position: relative; width: 96px; height: 96px; display: grid; place-items: center; }
+  .mic3 { position: relative; width: 78px; height: 78px; cursor: pointer; border: 0; background: #131117;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);
+    display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(255,140,66,0.25); }
+  .mic3 svg { width: 24px; height: 24px; color: var(--amber-hot); z-index: 2; }
+  .bracket { position: absolute; width: 14px; height: 14px; border: 1.5px solid rgba(255,140,66,0.5); }
+  .b-tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+  .b-tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
+  .b-bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
+  .b-br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+  .card3.on .mic3 { box-shadow: inset 0 0 0 1px rgba(255,140,66,0.6), 0 0 34px rgba(255,140,66,0.4); }
+  .card3.on .bracket { border-color: var(--amber); animation: flicker 1.6s steps(1,end) infinite; }
+  @keyframes flicker { 0%,88%,100% { opacity: 1; } 89%,91% { opacity: 0.3; } 92% { opacity: 1; } }
+
+  /* ---------- OPTION 4: WAVEFORM DISC ---------- */
+  .mic4 { position: relative; width: 84px; height: 84px; border-radius: 50%; border: 0; cursor: pointer;
+    background: radial-gradient(circle at 40% 30%, #2a2530, #16131a 70%); box-shadow: 0 0 0 1px rgba(255,140,66,0.2),
+    0 14px 30px rgba(0,0,0,0.45); display: grid; place-items: center; overflow: hidden; }
+  .mic4 svg { width: 24px; height: 24px; color: var(--amber-hot); z-index: 2; transition: opacity .2s; }
+  .mic4 .bars { position: absolute; display: flex; align-items: center; gap: 3px; opacity: 0; z-index: 2; }
+  .mic4 .bars i { width: 3px; height: 8px; background: var(--amber); border-radius: 2px; display: block; }
+  .card4.on .mic4 svg { opacity: 0; }
+  .card4.on .mic4 .bars { opacity: 1; }
+  .card4.on .mic4 { box-shadow: 0 0 0 1px rgba(255,140,66,0.6), 0 0 46px rgba(255,140,66,0.45); }
+  .mic4 .bars i:nth-child(1) { animation: bar 1s ease-in-out infinite -0.3s; }
+  .mic4 .bars i:nth-child(2) { animation: bar 1s ease-in-out infinite -0.15s; }
+  .mic4 .bars i:nth-child(3) { animation: bar 1s ease-in-out infinite 0s; }
+  .mic4 .bars i:nth-child(4) { animation: bar 1s ease-in-out infinite -0.2s; }
+  .mic4 .bars i:nth-child(5) { animation: bar 1s ease-in-out infinite -0.4s; }
+  @keyframes bar { 0%,100% { height: 6px; } 50% { height: 26px; } }
+</style>
+</head>
+<body>
+  <h1>Kyo — Mic Button Concepts</h1>
+  <div class="sub">click TAP TO PREVIEW to see the listening state</div>
+  <div class="grid">
+
+    <div class="card card1">
+      <h2>1 · Radar Ring</h2>
+      <div class="stagebox">
+        <button class="mic1" aria-label="mic">
+          <div class="ticks"></div>
+          <div class="sweep"></div>
+          <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p>Concentric rings with tick marks; a radar sweep spins around the button while listening. Reads as "scanning/sensing."</p>
+      <button class="toggle">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card card2">
+      <h2>2 · Liquid Glass Core</h2>
+      <div class="stagebox">
+        <button class="mic2" aria-label="mic">
+          <div class="glow"></div>
+          <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p>Frosted glass shell over a soft ember core, echoing the particle-burst canvas above it. Glow breathes when listening instead of a hard glossy sphere.</p>
+      <button class="toggle">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card card3">
+      <h2>3 · Faceted HUD Bezel</h2>
+      <div class="stagebox">
+        <div class="mic3wrap">
+          <div class="bracket b-tl"></div><div class="bracket b-tr"></div>
+          <div class="bracket b-bl"></div><div class="bracket b-br"></div>
+          <button class="mic3" aria-label="mic">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <p>Cut-corner octagon with detached corner brackets, matching the glitch-wordmark language. Brackets flicker on activation like a targeting reticle.</p>
+      <button class="toggle">TAP TO PREVIEW</button>
+    </div>
+
+    <div class="card card4">
+      <h2>4 · Waveform Morph</h2>
+      <div class="stagebox">
+        <button class="mic4" aria-label="mic">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.9"/><path d="M5 11a7 7 0 0014 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          <div class="bars"><i></i><i></i><i></i><i></i><i></i></div>
+        </button>
+      </div>
+      <p>Flat matte disc, icon dissolves into a live audio-bar equalizer the instant it's listening — the button itself becomes the waveform.</p>
+      <button class="toggle">TAP TO PREVIEW</button>
+    </div>
+
+  </div>
+
+  <script>
+    document.querySelectorAll('.toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.card');
+        card.classList.toggle('on');
+        btn.classList.toggle('on');
+      });
+    });
+  </script>
+</body>
+</html>
