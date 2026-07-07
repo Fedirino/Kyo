@@ -257,7 +257,12 @@
     <input id="eleven-voice" type="text" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" autocomplete="off" />
     <label for="voice">Browser Voice Fallback</label>
     <select id="voice"></select>
-    <p class="small" id="ttskey-note">If ElevenLabs is configured, Kyo speaks with it; otherwise your browser voice. Voice input uses the browser — on iOS Safari the mic may need a tap each time.</p>
+    <label for="handsfree">Hands-Free Wake Word</label>
+    <select id="handsfree">
+      <option value="0">Off — tap to talk</option>
+      <option value="1">On — say "hey Kyo"</option>
+    </select>
+    <p class="small" id="ttskey-note">If ElevenLabs is configured, Kyo speaks with it; otherwise your browser voice. Voice input uses the browser — on iOS Safari the mic may need a tap each time. Hands-free listens ambiently for "hey Kyo" and captures whatever follows; it needs the tab open and mic permission, and behavior varies by browser.</p>
     <div class="row">
       <button id="cancel-btn">Cancel</button>
       <button id="save-btn" class="primary">Save</button>
@@ -265,7 +270,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '0.5.1';
+    const APP_VERSION = '0.6.0';
 
     // ---------- state ----------
     const state = {
@@ -274,6 +279,7 @@
       voiceName: localStorage.getItem('kyo.voice') || '',
       elevenKey: localStorage.getItem('kyo.elevenKey') || '',
       elevenVoice: localStorage.getItem('kyo.elevenVoice') || '',
+      handsFree: localStorage.getItem('kyo.handsFree') === '1',
       mode: 'idle',
       messages: [
         { role: 'system', content: kyoSystemPrompt() }
@@ -324,7 +330,8 @@
       modelTag: document.getElementById('model-tag'),
       verTag: document.getElementById('ver-tag'),
       toast: document.getElementById('toast'),
-      toastText: document.getElementById('toast-text')
+      toastText: document.getElementById('toast-text'),
+      handsFree: document.getElementById('handsfree')
     };
 
     // ---------- ui ----------
@@ -344,7 +351,8 @@
       state.mode = mode;
       document.body.dataset.state = mode;
       els.status.innerHTML = label ? label : LABEL[mode];
-      els.whisper.textContent = WHISP[mode];
+      els.whisper.textContent = (mode === 'idle' && state.handsFree) ? 'say "hey kyo" — or tap' : WHISP[mode];
+      if (mode === 'idle') startAmbient(); else stopAmbient();
     }
 
     function addLine(role, text) {
@@ -483,6 +491,7 @@
       els.model.value = state.model;
       els.elevenKey.value = state.elevenKey;
       els.elevenVoice.value = state.elevenVoice;
+      els.handsFree.value = state.handsFree ? '1' : '0';
       populateVoices();
       els.scrim.classList.add('open');
       els.sheet.classList.add('open');
@@ -497,14 +506,22 @@
       state.elevenKey = els.elevenKey.value.trim();
       state.elevenVoice = els.elevenVoice.value.trim();
       state.voiceName = els.voiceSel.value;
+      const handsFreeWasOn = state.handsFree;
+      state.handsFree = els.handsFree.value === '1';
       localStorage.setItem('kyo.apiKey', state.apiKey);
       localStorage.setItem('kyo.model', state.model);
       localStorage.setItem('kyo.elevenKey', state.elevenKey);
       localStorage.setItem('kyo.elevenVoice', state.elevenVoice);
       localStorage.setItem('kyo.voice', state.voiceName);
+      localStorage.setItem('kyo.handsFree', state.handsFree ? '1' : '0');
       els.modelTag.textContent = state.model;
       els.settingsBtn.classList.toggle('flag', !state.apiKey);
       closeSettings();
+      if (state.mode === 'idle') {
+        els.whisper.textContent = state.handsFree ? 'say "hey kyo" — or tap' : WHISP.idle;
+        if (state.handsFree && !handsFreeWasOn) startAmbient();
+        if (!state.handsFree && handsFreeWasOn) stopAmbient();
+      }
     }
 
     function populateVoices() {
@@ -538,6 +555,7 @@
         try { state.recognition && state.recognition.stop(); } catch (e) {}
         return;
       }
+      stopAmbient();
       const rec = getRecognition();
       if (!rec) {
         setMode('idle', 'Voice not supported here');
@@ -565,6 +583,62 @@
       try { rec.start(); } catch (e) {
         state.listening = false; setMode('idle');
       }
+    }
+
+    // ---------- hands-free wake word ----------
+    let ambientRec = null;
+
+    function stripWakeWord(t) {
+      const m = t.match(/(?:hey|ok|okay|hi|yo)?\s*kyo[,:]?\s*(.*)$/i);
+      return m ? m[1].trim() : '';
+    }
+
+    function startAmbient() {
+      if (!state.handsFree || ambientRec || state.mode !== 'idle' || state.listening) return;
+      const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Ctor) return;
+      const r = new Ctor();
+      r.lang = 'en-US';
+      r.continuous = true;
+      r.interimResults = true;
+      r.maxAlternatives = 1;
+      ambientRec = r;
+      r.onresult = (ev) => {
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const res = ev.results[i];
+          if (!res.isFinal) continue;
+          const t = res[0].transcript.trim();
+          if (!/\bkyo\b/i.test(t)) continue;
+          const cmd = stripWakeWord(t);
+          stopAmbient();
+          if (cmd) handleUser(cmd); else listen();
+          break;
+        }
+      };
+      r.onerror = (ev) => {
+        if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+          state.handsFree = false;
+          localStorage.setItem('kyo.handsFree', '0');
+          showToast('mic permission denied — hands-free off');
+        }
+        // 'no-speech' and similar fire constantly in ambient mode; ignore and let onend restart
+      };
+      r.onend = () => {
+        const wasThis = ambientRec === r;
+        ambientRec = null;
+        if (wasThis && state.handsFree && state.mode === 'idle' && !state.listening) {
+          setTimeout(startAmbient, 250);
+        }
+      };
+      try { r.start(); } catch (e) { ambientRec = null; }
+    }
+
+    function stopAmbient() {
+      if (!ambientRec) return;
+      const r = ambientRec;
+      ambientRec = null;
+      r.onend = null;
+      try { r.stop(); } catch (e) {}
     }
 
     // ---------- speech out ----------

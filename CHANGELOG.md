@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+- Added hands-free wake-word mode (Settings → Hands-Free Wake Word). When on, Kyo listens ambiently in the background for "hey Kyo" (or just "Kyo") and either acts immediately if a command followed in the same breath, or opens the mic for what comes next.
+- Ambient listening pauses automatically while Kyo is listening for a manual tap, thinking, or speaking — so it can't hear itself and loop. Whisper text under the mic reflects hands-free status when idle.
+- Best-effort by nature: browser support for continuous recognition varies, so it auto-restarts itself in the background; if mic permission is denied it turns itself back off with a toast.
+- Version and service worker cache bumped to 0.6.0.
+
 ## 0.5.1
 - Added a desktop/large-viewport breakpoint (≥820px wide, ≥640px tall): wider shell, bigger brand mark, core, mic, and text, scrollable body instead of clipped. Same single file, no separate app — the mobile layout is untouched below that size.
 
