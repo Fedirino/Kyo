@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+- Renamed the app from Kyo to Winston (easier to say and for speech recognition to catch, which is what prompted it). Updated everywhere user-facing: title, wordmark, aria-labels, status text, persona name, greeting, hands-free wake word ("hey Winston" — with common mishearings like Weston/Winsten/Whinston covered), manifest, README.
+- Saved settings (API key, model, voice, etc.) are untouched — the underlying storage keys were intentionally left as-is, so nothing resets from the rename.
+- Brand wordmark box widened and resized to fit "Winston" cleanly at both mobile and desktop sizes.
+
 ## 0.6.1
 - Fixed a silent failure: if a browser doesn't support continuous speech recognition at all (Firefox has none, Safari's is limited), turning on hands-free used to just do nothing with zero feedback. It now shows a toast telling you it's not supported there and turns the setting back off, instead of looking broken.
 - Broadened wake-word matching — "Kyo" is an unusual word and speech engines often mishear it (Cairo, Kyoto, Kayo, etc.); those variants now trigger it too, and matching now checks interim results as well as final ones so it reacts faster.
