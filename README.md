@@ -1,3 +1,3 @@
-# Winston
+# Kyo
 
-Voice-first AI companion. (Formerly "Kyo" — renamed for easier voice/wake-word recognition.)
+Voice-first AI companion. Hermes is the brain; Kyo is the body/interface.
