@@ -564,6 +564,14 @@
     }
     if (window.speechSynthesis) speechSynthesis.onvoiceschanged = populateVoices;
 
+    function pickEnglishVoice(voices) {
+      const english = voices.find(v => /^en(?:[-_]|$)/i.test(v.lang || ''));
+      const stored = voices.find(v => v.name === state.voiceName);
+      if (stored && /^en(?:[-_]|$)/i.test(stored.lang || '')) return stored;
+      if (english) return english;
+      return stored || null;
+    }
+
     // ---------- speech in ----------
     function getRecognition() {
       const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -748,7 +756,7 @@
       try { speechSynthesis.cancel(); } catch (e) {}
       const utt = new SpeechSynthesisUtterance(text);
       const voices = speechSynthesis.getVoices() || [];
-      const v = voices.find(x => x.name === state.voiceName);
+      const v = pickEnglishVoice(voices);
       if (v) utt.voice = v;
       utt.rate = 1.02;
       utt.pitch = 1.0;
