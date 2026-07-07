@@ -294,7 +294,8 @@
       recognition: null,
       speaking: false,
       audio: null,
-      forecast: null
+      forecast: null,
+      pendingWeatherText: ''
     };
 
     function kyoSystemPrompt() {
@@ -936,26 +937,33 @@
       addLine('you', text);
       if (isWeatherQuestion(text)) {
         if (!state.location) {
+          state.pendingWeatherText = text;
           addLine('kyo', 'I need location permission to check weather. Tap allow, then ask me again.');
           speak('I need location permission to check weather.');
           initLocation();
           return;
         }
+
         if ((!state.weather || !state.forecast) && state.location) {
+          state.pendingWeatherText = text;
           setMode('thinking');
           await refreshWeather();
           setMode('idle');
         }
-        const weather = weatherReplyFor(text);
+
+        const weather = weatherReplyFor(state.pendingWeatherText || text);
+        state.pendingWeatherText = '';
         if (weather) {
           addLine('kyo', weather);
           speak(weather);
           return;
         }
+
         addLine('kyo', 'I still do not have enough weather data yet.');
         speak('I still do not have enough weather data yet.');
         return;
       }
+
       if (!state.apiKey) {
         addLine('kyo', 'I need an OpenRouter key first — tap the gear to open settings.');
         speak('Add your key in settings.');
