@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+- Ember Core now drifts subtly with the real local time of day: warm bright orange near 2pm, cooling toward a deeper, dimmer ember-red around 2am, smoothly in between. Idle state also breathes gently instead of holding a static spike.
+- Kyo now gets a live system note before every message with the real current date/time, and — with location permission — current local weather pulled from Open-Meteo (free, no API key), refreshed every 15 minutes. Keeps answers about "what time is it" / "what's it like out" grounded in reality instead of guessed.
+- Persona now addresses the user as Fedirino or Sir (never Nick) and is written to feel like it already has rapport — established assistant, not a fresh introduction.
+- Conversation history is still session-only for now (not persisted across reloads) — holding off on that by request.
+
 ## 0.4.1
 - Killed the default mobile blue tap-highlight on buttons/links; added a proper focus-visible ring for keyboard/accessibility use instead.
 - Mic button now clearly shows "on": filled amber background + brighter border while listening, plus an expanding pulse ring, on top of the existing corona and icon glow.

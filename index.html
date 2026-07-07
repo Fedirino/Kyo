@@ -244,7 +244,7 @@
   </div>
 
   <script>
-    const APP_VERSION = '0.4.1';
+    const APP_VERSION = '0.5.0';
 
     // ---------- state ----------
     const state = {
@@ -270,8 +270,9 @@
         "Default to SHORT replies: 1-2 sentences, plain natural spoken English.",
         "Acknowledge then act: 'On it.', 'Done.', 'One moment.' No filler, no corporate tone, no fake cheerfulness.",
         "Do not use markdown, lists, or emoji in spoken answers unless asked.",
-        "You will eventually bridge to Nick's Hermes agent; it's fine to reference that future link when relevant.",
-        "The user is Nick (Fedirino). He works in management in retail produce, is learning Python and data analytics, and is building Clarity, Pulse, and Kyo. He prefers direct answers, clean modular code, real output over vague talk, and concise senior-dev-style help.",
+        "You will eventually bridge to Fedirino's Hermes agent; it's fine to reference that future link when relevant.",
+        "You already know the user well — this is not a first conversation. Address him as Fedirino or Sir, never Nick. He works in management in retail produce, is learning Python and data analytics, and is building three of his own tools: Clarity, Pulse, and you (Kyo). He prefers direct answers, clean modular code, real output over vague talk, and concise senior-dev-style help. Act like an assistant with established rapport — familiar and a little dry, not a bot introducing itself.",
+        "You receive a short system note before each message with the live local date, time, and — when available — current local weather. Treat it as ground truth and use it naturally (small talk, answering 'what time is it', 'what's it like outside', etc.) without ever mentioning that it was injected or how you know it.",
         "You can actually open things in the browser. When the user asks you to open a website, look something up on the web, or pull up a map/directions/location, end your reply with exactly one action tag on its own final line, in this exact format and nothing else on that line:",
         "[ACTION:OPEN_URL|https://example.com] to open a specific site,",
         "[ACTION:SEARCH|query terms] to run a web search,",
@@ -356,6 +357,15 @@
         ph: Math.random() * Math.PI * 2
       });
     }
+    // subtle day/night drift: 0 at 2pm local (day-warm peak), 1 at 2am local (night-ember peak)
+    function nightMix() {
+      const now = new Date();
+      const h = now.getHours() + now.getMinutes() / 60;
+      const rad = ((h - 14) / 24) * Math.PI * 2;
+      return (1 - Math.cos(rad)) / 2;
+    }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
     let coreTime = 0, coreRot = 0, speakAmp = 0;
     function coreFrame() {
       coreTime += 0.016;
@@ -363,15 +373,23 @@
       coreRot += s === 'listening' ? 0.0032 : s === 'thinking' ? 0.010 : 0.0012;
       if (s === 'speaking') speakAmp += ((14 + Math.random() * 24) - speakAmp) * 0.25;
       else speakAmp *= 0.9;
-      let S = 0.42;
+      let S;
       if (s === 'listening') S = 1.0;
       else if (s === 'thinking') S = 0.24;
       else if (s === 'speaking') S = 0.5 + Math.min(speakAmp, 34) / 40;
+      else S = 0.42 + Math.sin(coreTime * 0.4) * 0.05; // idle: slow breathing instead of a static spike
+
+      const nm = nightMix(); // 0 = daytime warm ember, 1 = deep-night cooled ember
+      const glowRGB = [Math.round(lerp(255, 205, nm)), Math.round(lerp(140, 66, nm)), Math.round(lerp(66, 96, nm))];
+      const spikeRGB = [Math.round(lerp(224, 150, nm)), Math.round(lerp(92, 48, nm)), Math.round(lerp(26, 78, nm))];
+      const tipRGB   = [Math.round(lerp(255, 226, nm)), Math.round(lerp(201, 158, nm)), Math.round(lerp(163, 188, nm))];
+      const baseRGB  = [Math.round(lerp(255, 205, nm)), Math.round(lerp(140, 70, nm)), Math.round(lerp(66, 100, nm))];
+      const ringRGB  = [Math.round(lerp(255, 224, nm)), Math.round(lerp(201, 168, nm)), Math.round(lerp(163, 196, nm))];
 
       cx.clearRect(0, 0, W, H);
       const g = cx.createRadialGradient(CX, CY, 20, CX, CY, 128);
-      g.addColorStop(0, 'rgba(255,140,66,0.10)');
-      g.addColorStop(1, 'rgba(255,140,66,0)');
+      g.addColorStop(0, 'rgba(' + glowRGB.join(',') + ',0.10)');
+      g.addColorStop(1, 'rgba(' + glowRGB.join(',') + ',0)');
       cx.fillStyle = g;
       cx.beginPath(); cx.arc(CX, CY, 128, 0, 6.29); cx.fill();
 
@@ -383,15 +401,15 @@
         const ca = Math.cos(a), sa = Math.sin(a);
         const x0 = CX + ca * r0, y0 = CY + sa * r0 * 0.96;
         const x1 = CX + ca * (r0 + spike), y1 = CY + sa * (r0 + spike) * 0.96;
-        cx.strokeStyle = 'rgba(224,92,26,' + (0.30 + 0.34 * tw).toFixed(3) + ')';
+        cx.strokeStyle = 'rgba(' + spikeRGB.join(',') + ',' + (0.30 + 0.34 * tw).toFixed(3) + ')';
         cx.lineWidth = 1.6;
         cx.beginPath(); cx.moveTo(x0, y0); cx.lineTo(x1, y1); cx.stroke();
-        cx.fillStyle = 'rgba(255,201,163,' + (0.5 + 0.5 * tw).toFixed(3) + ')';
+        cx.fillStyle = 'rgba(' + tipRGB.join(',') + ',' + (0.5 + 0.5 * tw).toFixed(3) + ')';
         cx.beginPath(); cx.arc(x0, y0, 1.9, 0, 6.29); cx.fill();
-        cx.fillStyle = 'rgba(255,140,66,' + (0.35 + 0.45 * tw).toFixed(3) + ')';
+        cx.fillStyle = 'rgba(' + baseRGB.join(',') + ',' + (0.35 + 0.45 * tw).toFixed(3) + ')';
         cx.beginPath(); cx.arc(x1, y1, 1.3, 0, 6.29); cx.fill();
       }
-      cx.strokeStyle = 'rgba(255,201,163,0.28)';
+      cx.strokeStyle = 'rgba(' + ringRGB.join(',') + ',0.28)';
       cx.lineWidth = 1;
       cx.beginPath(); cx.arc(CX, CY, 91, 0, 6.29); cx.stroke();
       requestAnimationFrame(coreFrame);
@@ -652,6 +670,64 @@
       }
     }
 
+    // ---------- live context: date/time + free weather API ----------
+    const WEATHER_CODES = {
+      0: 'clear sky', 1: 'mostly clear', 2: 'partly cloudy', 3: 'overcast',
+      45: 'foggy', 48: 'freezing fog',
+      51: 'light drizzle', 53: 'drizzle', 55: 'heavy drizzle',
+      61: 'light rain', 63: 'rain', 65: 'heavy rain',
+      66: 'freezing rain', 67: 'heavy freezing rain',
+      71: 'light snow', 73: 'snow', 75: 'heavy snow', 77: 'snow grains',
+      80: 'light showers', 81: 'showers', 82: 'violent showers',
+      85: 'snow showers', 86: 'heavy snow showers',
+      95: 'thunderstorms', 96: 'thunderstorms with hail', 99: 'severe thunderstorms with hail'
+    };
+    state.location = null;
+    state.weather = null;
+
+    function initLocation() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          state.location = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+          refreshWeather();
+        },
+        () => {},
+        { maximumAge: 10 * 60 * 1000, timeout: 8000 }
+      );
+    }
+
+    async function refreshWeather() {
+      if (!state.location) return;
+      try {
+        const { lat, lon } = state.location;
+        const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+          '&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto';
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.current) return;
+        state.weather = {
+          tempF: Math.round(data.current.temperature_2m),
+          desc: WEATHER_CODES[data.current.weather_code] || 'unclear skies',
+          fetchedAt: Date.now()
+        };
+      } catch (e) { /* stay silent, live context is best-effort */ }
+    }
+    setInterval(refreshWeather, 15 * 60 * 1000);
+
+    function liveContext() {
+      const now = new Date();
+      const parts = [
+        'Live system note — current local date/time: ' +
+        now.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '.'
+      ];
+      if (state.weather && (Date.now() - state.weather.fetchedAt) < 30 * 60 * 1000) {
+        parts.push('Current local weather: ' + state.weather.tempF + '°F, ' + state.weather.desc + '.');
+      }
+      return { role: 'system', content: parts.join(' ') };
+    }
+
     // ---------- chat ----------
     async function handleUser(text) {
       addLine('you', text);
@@ -680,7 +756,7 @@
     async function callOpenRouter() {
       const body = {
         model: state.model,
-        messages: state.messages,
+        messages: [state.messages[0], liveContext(), ...state.messages.slice(1)],
         max_tokens: 220,
         temperature: 0.6
       };
@@ -721,9 +797,11 @@
     function timeGreeting() {
       const h = new Date().getHours();
       const part = h < 5 ? 'evening' : h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
-      return 'Good ' + part + ', Nick. How can I help?';
+      const address = Math.random() < 0.5 ? 'Fedirino' : 'Sir';
+      return 'Good ' + part + ', ' + address + '. How can I help?';
     }
     addLine('kyo', timeGreeting());
+    initLocation();
     els.modelTag.textContent = state.model;
     els.verTag.textContent = 'Kyo v' + APP_VERSION;
     setMode('idle');
