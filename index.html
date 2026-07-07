@@ -262,7 +262,12 @@
       <option value="0">Off — tap to talk</option>
       <option value="1">On — say "hey Winston"</option>
     </select>
-    <p class="small" id="ttskey-note">If ElevenLabs is configured, Winston speaks with it; otherwise your browser voice. Voice input uses the browser — on iOS Safari the mic may need a tap each time. Hands-free listens ambiently for "hey Winston" and captures whatever follows; it needs the tab open and mic permission, and behavior varies by browser.</p>
+    <label for="continuous">Continuous Mic Conversation</label>
+    <select id="continuous">
+      <option value="0">Off — one turn at a time</option>
+      <option value="1">On — reopen mic after each reply</option>
+    </select>
+    <p class="small" id="ttskey-note">If ElevenLabs is configured, Winston speaks with it; otherwise your browser voice. Voice input uses the browser — on iOS Safari the mic may need a tap each time. Hands-free listens ambiently for "hey Winston" and captures whatever follows; continuous mic mode reopens the mic after Winston finishes speaking so you can keep going. Behavior varies by browser.</p>
     <div class="row">
       <button id="cancel-btn">Cancel</button>
       <button id="save-btn" class="primary">Save</button>
@@ -280,6 +285,7 @@
       elevenKey: localStorage.getItem('kyo.elevenKey') || '',
       elevenVoice: localStorage.getItem('kyo.elevenVoice') || '',
       handsFree: localStorage.getItem('kyo.handsFree') === '1',
+      continuous: localStorage.getItem('kyo.continuous') === '1',
       mode: 'idle',
       messages: [
         { role: 'system', content: kyoSystemPrompt() }
@@ -287,7 +293,8 @@
       listening: false,
       recognition: null,
       speaking: false,
-      audio: null
+      audio: null,
+      forecast: null
     };
 
     function kyoSystemPrompt() {
@@ -298,7 +305,7 @@
         "Acknowledge then act: 'On it.', 'Done.', 'One moment.' No filler, no corporate tone, no fake cheerfulness.",
         "Do not use markdown, lists, or emoji in spoken answers unless asked.",
         "You will eventually bridge to Fedirino's Hermes agent; it's fine to reference that future link when relevant.",
-        "You already know the user well — this is not a first conversation. Address him as Fedirino or Sir, never Nick. He works in management in retail produce, is learning Python and data analytics, and is building three of his own tools: Clarity, Pulse, and you (Winston). He prefers direct answers, clean modular code, real output over vague talk, and concise senior-dev-style help. Act like an assistant with established rapport — familiar and a little dry, not a bot introducing itself.",
+        "You already know the user well — this is not a first conversation. Address him as Fedirino or Sir, never Nick. He works in management in retail produce, is learning Python and data analytics, and is building several tools: Clarity (a live clarity-pool.firebase app), Pulse (a mobile-first home dashboard), PDP (a produce-department PWA with Firestore sync), Produce Guy / Clip Forge (a faceless short-form video pipeline), Signal Ghost (a broken-transmission style AI voice/music concept), and you (Winston). Hermes is intended to be the brain for the local companion path; Kyo/Winston is the interface. He prefers direct answers, clean modular code, real output over vague talk, and concise senior-dev-style help. Act like an assistant with established rapport — familiar and a little dry, not a bot introducing itself.",
         "You receive a short system note before each message with the live local date, time, and — when available — current local weather. Treat it as ground truth and use it naturally (small talk, answering 'what time is it', 'what's it like outside', etc.) without ever mentioning that it was injected or how you know it.",
         "You can actually open things in the browser. When the user asks you to open a website, look something up on the web, or pull up a map/directions/location, end your reply with exactly one action tag on its own final line, in this exact format and nothing else on that line:",
         "[ACTION:OPEN_URL|https://example.com] to open a specific site,",
@@ -492,6 +499,7 @@
       els.elevenKey.value = state.elevenKey;
       els.elevenVoice.value = state.elevenVoice;
       els.handsFree.value = state.handsFree ? '1' : '0';
+      els.continuous.value = state.continuous ? '1' : '0';
       populateVoices();
       els.scrim.classList.add('open');
       els.sheet.classList.add('open');
@@ -507,13 +515,16 @@
       state.elevenVoice = els.elevenVoice.value.trim();
       state.voiceName = els.voiceSel.value;
       const handsFreeWasOn = state.handsFree;
+      const continuousWasOn = state.continuous;
       state.handsFree = els.handsFree.value === '1';
+      state.continuous = els.continuous.value === '1';
       localStorage.setItem('kyo.apiKey', state.apiKey);
       localStorage.setItem('kyo.model', state.model);
       localStorage.setItem('kyo.elevenKey', state.elevenKey);
       localStorage.setItem('kyo.elevenVoice', state.elevenVoice);
       localStorage.setItem('kyo.voice', state.voiceName);
       localStorage.setItem('kyo.handsFree', state.handsFree ? '1' : '0');
+      localStorage.setItem('kyo.continuous', state.continuous ? '1' : '0');
       els.modelTag.textContent = state.model;
       els.settingsBtn.classList.toggle('flag', !state.apiKey);
       closeSettings();
@@ -532,7 +543,11 @@
         if (state.handsFree && !handsFreeWasOn) startAmbient();
         if (!state.handsFree && handsFreeWasOn) stopAmbient();
       }
+      if (state.continuous && !continuousWasOn) {
+        showToast('continuous mic on — Winston will reopen the mic after speaking');
+      }
     }
+
 
     function populateVoices() {
       const voices = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
@@ -692,12 +707,12 @@
           audio.onended = () => {
             try { URL.revokeObjectURL(url); } catch (e) {}
             if (state.audio === audio) state.audio = null;
-            setMode('idle');
+            handleReplyComplete();
           };
           audio.onerror = () => {
             try { URL.revokeObjectURL(url); } catch (e) {}
             if (state.audio === audio) state.audio = null;
-            setMode('idle');
+            handleReplyComplete();
             fallbackSpeak(text);
           };
           await audio.play();
@@ -709,8 +724,27 @@
       fallbackSpeak(text);
     }
 
+    let micReopenTimer = null;
+    function queueMicReopen() {
+      clearTimeout(micReopenTimer);
+      micReopenTimer = setTimeout(() => {
+        if (!state.continuous) return;
+        if (state.mode !== 'idle') return;
+        if (state.handsFree) {
+          startAmbient();
+          return;
+        }
+        listen();
+      }, 450);
+    }
+
+    function handleReplyComplete() {
+      setMode('idle');
+      if (state.continuous) queueMicReopen();
+    }
+
     function fallbackSpeak(text) {
-      if (!('speechSynthesis' in window)) { setMode('idle'); return; }
+      if (!('speechSynthesis' in window)) { setMode('idle'); handleReplyComplete(); return; }
       try { speechSynthesis.cancel(); } catch (e) {}
       const utt = new SpeechSynthesisUtterance(text);
       const voices = speechSynthesis.getVoices() || [];
@@ -719,8 +753,8 @@
       utt.rate = 1.02;
       utt.pitch = 1.0;
       utt.onstart = () => setMode('speaking');
-      utt.onend   = () => setMode('idle');
-      utt.onerror = () => setMode('idle');
+      utt.onend   = () => handleReplyComplete();
+      utt.onerror = () => handleReplyComplete();
       state.speaking = true;
       speechSynthesis.speak(utt);
     }
@@ -816,7 +850,7 @@
       try {
         const { lat, lon } = state.location;
         const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
-          '&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto';
+          '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=3&temperature_unit=fahrenheit&timezone=auto';
         const res = await fetch(url);
         if (!res.ok) return;
         const data = await res.json();
@@ -826,6 +860,17 @@
           desc: WEATHER_CODES[data.current.weather_code] || 'unclear skies',
           fetchedAt: Date.now()
         };
+        const daily = data.daily || {};
+        const dates = daily.time || [];
+        const maxs = daily.temperature_2m_max || [];
+        const mins = daily.temperature_2m_min || [];
+        const codes = daily.weather_code || [];
+        state.forecast = dates.slice(0, 3).map((day, idx) => ({
+          label: idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : 'Day after tomorrow',
+          highF: Math.round(maxs[idx]),
+          lowF: Math.round(mins[idx]),
+          desc: WEATHER_CODES[codes[idx]] || 'unclear skies'
+        })).filter(item => Number.isFinite(item.highF) && Number.isFinite(item.lowF));
       } catch (e) { /* stay silent, live context is best-effort */ }
     }
     setInterval(refreshWeather, 15 * 60 * 1000);
@@ -839,12 +884,70 @@
       if (state.weather && (Date.now() - state.weather.fetchedAt) < 30 * 60 * 1000) {
         parts.push('Current local weather: ' + state.weather.tempF + '°F, ' + state.weather.desc + '.');
       }
+      if (state.forecast && state.forecast.length) {
+        const tomorrow = state.forecast[0];
+        const dayAfter = state.forecast[1];
+        if (tomorrow) parts.push('Tomorrow forecast: ' + tomorrow.label + ', high ' + tomorrow.highF + '°F, low ' + tomorrow.lowF + '°F.');
+        if (dayAfter) parts.push('Day after tomorrow forecast: ' + dayAfter.label + ', high ' + dayAfter.highF + '°F, low ' + dayAfter.lowF + '°F.');
+      }
+      parts.push('If the user asks for weather beyond the live snapshot, explain the best available forecast and be explicit when it is for tomorrow or the day after tomorrow.');
       return { role: 'system', content: parts.join(' ') };
+    }
+
+    function isWeatherQuestion(text) {
+      return /\b(weather|forecast|rain|snow|temperature|hot|cold|tomorrow|today|tonight|weekend)\b/i.test(text);
+    }
+
+    function weatherReplyFor(text) {
+      const wantsTomorrow = /\btomorrow\b/i.test(text);
+      const wantsDayAfter = /\bday after tomorrow\b/i.test(text);
+      const wantsForecast = /\bforecast|weekend|rest of the week\b/i.test(text) || wantsTomorrow || wantsDayAfter;
+      const current = state.weather;
+      const forecast = state.forecast || [];
+      if (!current && !forecast.length) return null;
+
+      const chunks = [];
+      if (current) chunks.push('Right now it is ' + current.tempF + '°F and ' + current.desc + '.');
+      if (forecast.length) {
+        const tomorrow = forecast[0];
+        const dayAfter = forecast[1];
+        if (wantsDayAfter && dayAfter) {
+          chunks.push('Day after tomorrow looks ' + dayAfter.desc + ' with a high of ' + dayAfter.highF + '°F and a low of ' + dayAfter.lowF + '°F.');
+        } else if ((wantsTomorrow || wantsForecast) && tomorrow) {
+          chunks.push('Tomorrow looks ' + tomorrow.desc + ' with a high of ' + tomorrow.highF + '°F and a low of ' + tomorrow.lowF + '°F.');
+          if (dayAfter && wantsForecast) {
+            chunks.push('The day after tomorrow looks ' + dayAfter.desc + ' with a high of ' + dayAfter.highF + '°F and a low of ' + dayAfter.lowF + '°F.');
+          }
+        }
+      }
+      return chunks.length ? chunks.join(' ') : null;
     }
 
     // ---------- chat ----------
     async function handleUser(text) {
       addLine('you', text);
+      if (isWeatherQuestion(text)) {
+        if (!state.location) {
+          addLine('kyo', 'I need location permission to check weather. Tap allow, then ask me again.');
+          speak('I need location permission to check weather.');
+          initLocation();
+          return;
+        }
+        if ((!state.weather || !state.forecast) && state.location) {
+          setMode('thinking');
+          await refreshWeather();
+          setMode('idle');
+        }
+        const weather = weatherReplyFor(text);
+        if (weather) {
+          addLine('kyo', weather);
+          speak(weather);
+          return;
+        }
+        addLine('kyo', 'I still do not have enough weather data yet.');
+        speak('I still do not have enough weather data yet.');
+        return;
+      }
       if (!state.apiKey) {
         addLine('kyo', 'I need an OpenRouter key first — tap the gear to open settings.');
         speak('Add your key in settings.');
