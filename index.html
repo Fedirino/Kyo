@@ -789,4 +789,525 @@
           });
           if (!res.ok) throw new Error('ElevenLabs ' + res.status);
           const blob = await res.blob();
-          const url = URL.cr
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          state.audio = audio;
+          audio.onended = () => {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+            if (state.audio === audio) state.audio = null;
+            handleReplyComplete();
+          };
+          audio.onerror = () => {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+            if (state.audio === audio) state.audio = null;
+            handleReplyComplete();
+            fallbackSpeak(text);
+          };
+          await audio.play();
+          return;
+        } catch (e) {
+          console.warn('ElevenLabs TTS failed, falling back to browser voice:', e);
+        }
+      }
+      fallbackSpeak(text);
+    }
+
+    let micReopenTimer = null;
+    function queueMicReopen() {
+      clearTimeout(micReopenTimer);
+      micReopenTimer = setTimeout(() => {
+        if (!state.continuous) return;
+        if (state.mode !== 'idle') return;
+        if (state.handsFree) {
+          startAmbient();
+          return;
+        }
+        listen();
+      }, 450);
+    }
+
+    function handleReplyComplete() {
+      setMode('idle');
+      if (state.continuous) queueMicReopen();
+    }
+
+    function fallbackSpeak(text) {
+      if (!('speechSynthesis' in window)) { setMode('idle'); handleReplyComplete(); return; }
+      try { speechSynthesis.cancel(); } catch (e) {}
+      const utt = new SpeechSynthesisUtterance(text);
+      const voices = speechSynthesis.getVoices() || [];
+      const v = pickEnglishVoice(voices);
+      if (v) utt.voice = v;
+      utt.rate = 1.02;
+      utt.pitch = 1.0;
+      utt.onstart = () => setMode('speaking');
+      utt.onend   = () => handleReplyComplete();
+      utt.onerror = () => handleReplyComplete();
+      state.speaking = true;
+      speechSynthesis.speak(utt);
+    }
+
+    // ---------- actions ----------
+    let toastTimer = null;
+    function showToast(text) {
+      els.toastText.textContent = text;
+      els.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => els.toast.classList.remove('show'), 3200);
+    }
+
+    function openWithAppFallback(appUrl, webUrl) {
+      let hidden = false;
+      const onHide = () => { if (document.hidden) hidden = true; };
+      document.addEventListener('visibilitychange', onHide);
+      const before = Date.now();
+      window.location.href = appUrl;
+      setTimeout(() => {
+        document.removeEventListener('visibilitychange', onHide);
+        // if the tab never lost focus (or barely did), the app scheme didn't catch — fall back to web
+        if (!hidden && Date.now() - before < 1600) {
+          window.open(webUrl, '_blank', 'noopener');
+        }
+      }, 900);
+    }
+
+    function parseAction(reply) {
+      const m = reply.match(/\[ACTION:(OPEN_URL|SEARCH|MAP)\|([^\]]+)\]\s*$/i);
+      if (!m) return { text: reply, action: null };
+      const text = reply.slice(0, m.index).trim();
+      return { text, action: { type: m[1].toUpperCase(), payload: m[2].trim() } };
+    }
+
+    function runAction(action) {
+      if (!action) return;
+      try {
+        if (action.type === 'OPEN_URL') {
+          let url = action.payload;
+          if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+          showToast('opening ' + new URL(url).hostname.replace(/^www\./, ''));
+          window.open(url, '_blank', 'noopener');
+        } else if (action.type === 'SEARCH') {
+          showToast('searching — ' + action.payload);
+          window.open('https://www.google.com/search?q=' + encodeURIComponent(action.payload), '_blank', 'noopener');
+        } else if (action.type === 'MAP') {
+          showToast('opening map — ' + action.payload);
+          const p = action.payload;
+          const toMatch = p.match(/^from\s+(.+?)\s+to\s+(.+)$/i);
+          const webUrl = toMatch
+            ? 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(toMatch[1]) + '&destination=' + encodeURIComponent(toMatch[2])
+            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p);
+          const appUrl = toMatch
+            ? 'comgooglemaps://?saddr=' + encodeURIComponent(toMatch[1]) + '&daddr=' + encodeURIComponent(toMatch[2]) + '&directionsmode=driving'
+            : 'comgooglemaps://?q=' + encodeURIComponent(p);
+          openWithAppFallback(appUrl, webUrl);
+        }
+      } catch (e) {
+        console.warn('action failed', e);
+      }
+    }
+
+    // ---------- travel ----------
+    function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function clamp01(n) { return Math.max(0, Math.min(1, n)); }
+    function greatCirclePoint(a, b, t) {
+      const ax = a.x, ay = a.y, az = a.z;
+      const bx = b.x, by = b.y, bz = b.z;
+      const dot = Math.max(-1, Math.min(1, ax * bx + ay * by + az * bz));
+      const omega = Math.acos(dot);
+      if (omega < 1e-5) return { x: ax, y: ay, z: az };
+      const so = Math.sin(omega);
+      const s1 = Math.sin((1 - t) * omega) / so;
+      const s2 = Math.sin(t * omega) / so;
+      return { x: ax * s1 + bx * s2, y: ay * s1 + by * s2, z: az * s1 + bz * s2 };
+    }
+    function latLonToVec(lat, lon) {
+      const la = lat * Math.PI / 180;
+      const lo = lon * Math.PI / 180;
+      return { x: Math.cos(la) * Math.cos(lo), y: Math.sin(la), z: Math.cos(la) * Math.sin(lo) };
+    }
+    function vecToXY(vec, cx, cy, r, spin) {
+      const lon = Math.atan2(vec.z, vec.x) + spin;
+      const lat = Math.asin(vec.y);
+      return { x: cx + Math.cos(lat) * Math.cos(lon) * r, y: cy - Math.sin(lat) * r * 0.84, lat, lon };
+    }
+    function drawTravelFrame(ctx, w, h, origin, target, progress) {
+      const cx = w / 2, cy = h / 2;
+      const fade = 1 - Math.pow(progress, 0.8);
+      ctx.clearRect(0, 0, w, h);
+      const bg = ctx.createRadialGradient(cx, cy * 0.92, 40, cx, cy, Math.max(w, h) * 0.72);
+      bg.addColorStop(0, 'rgba(32,72,122,0.55)');
+      bg.addColorStop(0.45, 'rgba(7,15,28,0.9)');
+      bg.addColorStop(1, 'rgba(1,4,9,1)');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 140; i++) {
+        const x = (i * 97.3 + progress * 190) % w;
+        const y = (i * 53.1 + progress * 47) % h;
+        const a = 0.04 + ((i % 5) * 0.01);
+        ctx.fillStyle = 'rgba(190,235,255,' + a.toFixed(3) + ')';
+        ctx.fillRect(x, y, 2, 2);
+      }
+      const radius = Math.min(w, h) * (0.30 + 0.06 * Math.sin(progress * Math.PI));
+      const globeY = cy + Math.sin(progress * Math.PI * 0.8) * 10;
+      const spin = progress * Math.PI * 1.35;
+      ctx.save();
+      ctx.translate(cx, globeY);
+      const glow = ctx.createRadialGradient(0, 0, radius * 0.2, 0, 0, radius * 1.18);
+      glow.addColorStop(0, 'rgba(92,182,255,0.16)');
+      glow.addColorStop(0.65, 'rgba(60,110,180,0.08)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(11,22,33,0.95)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(142,214,255,0.22)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.save();
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(124,198,245,0.15)';
+      ctx.lineWidth = 1;
+      for (let i = -3; i <= 3; i++) {
+        const lat = (i / 4) * Math.PI * 0.92;
+        ctx.beginPath();
+        for (let j = 0; j <= 160; j++) {
+          const lon = (j / 160) * Math.PI * 2 - Math.PI;
+          const x = Math.cos(lat) * Math.cos(lon + spin) * radius;
+          const y = Math.sin(lat) * radius * 0.84;
+          if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      for (let i = -4; i <= 4; i++) {
+        const lon = (i / 4) * Math.PI * 0.98;
+        ctx.beginPath();
+        for (let j = 0; j <= 120; j++) {
+          const lat = (j / 120) * Math.PI - Math.PI / 2;
+          const x = Math.cos(lat) * Math.cos(lon + spin) * radius;
+          const y = Math.sin(lat) * radius * 0.84;
+          if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+      const o = vecToXY(latLonToVec(origin.lat, origin.lon), cx, globeY, radius, spin);
+      const t = vecToXY(latLonToVec(target.lat, target.lon), cx, globeY, radius, spin);
+      const route = greatCirclePoint(latLonToVec(origin.lat, origin.lon), latLonToVec(target.lat, target.lon), clamp01(progress));
+      const m = vecToXY(route, cx, globeY, radius, spin);
+      ctx.strokeStyle = 'rgba(115,214,255,' + (0.18 + 0.22 * fade).toFixed(3) + ')';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(o.x, o.y);
+      ctx.quadraticCurveTo(cx, globeY - radius * 1.1, t.x, t.y);
+      ctx.stroke();
+      const pulse = 5 + 10 * (1 - progress);
+      ctx.fillStyle = 'rgba(141,220,255,0.95)';
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(141,220,255,0.45)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, pulse * 0.6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(173,236,255,' + (0.72 + 0.2 * fade).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 4.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(173,236,255,0.38)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 9 + 8 * (1 - progress), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(232,246,255,' + (0.9 * fade + 0.1).toFixed(3) + ')';
+      ctx.font = '600 ' + Math.max(12, Math.round(w * 0.016)) + 'px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(progress < 0.65 ? 'flying over the globe…' : 'locking onto target…', cx, globeY + radius + 30);
+      ctx.restore();
+    }
+    function showTravelScene(target) {
+      if (!els.travel) return false;
+      if (state.travel && state.travel.raf) cancelAnimationFrame(state.travel.raf);
+      if (state.travel && state.travel.hideTimer) clearTimeout(state.travel.hideTimer);
+      const origin = state.location || DEFAULT_HOME;
+      const canvas = els.travelCanvas;
+      const ctx = canvas.getContext('2d');
+      const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      const stateBag = { raf: 0, hideTimer: 0, active: true };
+      state.travel = stateBag;
+      els.travelTitle.textContent = target.name;
+      els.travelSub.textContent = 'Starting from your current position and flying to ' + target.name + '.';
+      els.travelChiprow.innerHTML = '';
+      (target.chips || []).forEach((chip) => {
+        const span = document.createElement('span');
+        span.className = 'travel-chip';
+        span.textContent = chip;
+        els.travelChiprow.appendChild(span);
+      });
+      els.travel.classList.add('show');
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+      setMode('thinking', '<b>Winston</b> is flying to ' + target.name + '…');
+      const start = performance.now();
+      const duration = 4300;
+      const loop = (now) => {
+        const progress = clamp01((now - start) / duration);
+        drawTravelFrame(ctx, canvas.width / dpr, canvas.height / dpr, origin, target, easeInOutCubic(progress));
+        if (progress < 1 && stateBag.active) {
+          stateBag.raf = requestAnimationFrame(loop);
+        } else {
+          stateBag.active = false;
+        }
+      };
+      stateBag.raf = requestAnimationFrame(loop);
+      stateBag.hideTimer = setTimeout(() => {
+        stateBag.active = false;
+        cancelAnimationFrame(stateBag.raf);
+        els.travel.classList.remove('show');
+        window.removeEventListener('resize', resize);
+        setMode('idle');
+      }, duration + 250);
+      window.__kyoTestFlyTo = (name) => {
+        const resolved = resolveTravelTarget(name);
+        if (resolved) return showTravelScene(resolved);
+        return false;
+      };
+      window.flyToPreset = window.__kyoTestFlyTo;
+      return true;
+    }
+    // ---------- weather ----------
+    const WEATHER_CODES = {
+      0: 'clear sky', 1: 'mostly clear', 2: 'partly cloudy', 3: 'overcast',
+      45: 'foggy', 48: 'freezing fog',
+      51: 'light drizzle', 53: 'drizzle', 55: 'heavy drizzle',
+      61: 'light rain', 63: 'rain', 65: 'heavy rain',
+      66: 'freezing rain', 67: 'heavy freezing rain',
+      71: 'light snow', 73: 'snow', 75: 'heavy snow', 77: 'snow grains',
+      80: 'light showers', 81: 'showers', 82: 'violent showers',
+      85: 'snow showers', 86: 'heavy snow showers',
+      95: 'thunderstorms', 96: 'thunderstorms with hail', 99: 'severe thunderstorms with hail'
+    };
+
+    function initLocation() {
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          state.location = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+          refreshWeather();
+        },
+        () => {},
+        { maximumAge: 10 * 60 * 1000, timeout: 8000 }
+      );
+    }
+
+    async function refreshWeather() {
+      if (!state.location) return false;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      try {
+        const { lat, lon } = state.location;
+        const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+          '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=7&temperature_unit=fahrenheit&timezone=auto';
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) return false;
+        const data = await res.json();
+        if (!data.current) return false;
+        state.weather = {
+          tempF: Math.round(data.current.temperature_2m),
+          desc: WEATHER_CODES[data.current.weather_code] || 'unclear skies',
+          fetchedAt: Date.now()
+        };
+        const daily = data.daily || {};
+        const dates = daily.time || [];
+        const maxs = daily.temperature_2m_max || [];
+        const mins = daily.temperature_2m_min || [];
+        const codes = daily.weather_code || [];
+        state.forecast = dates.slice(0, 7).map((day, idx) => ({
+          label: idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : new Date(day + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }),
+          highF: Math.round(maxs[idx]),
+          lowF: Math.round(mins[idx]),
+          desc: WEATHER_CODES[codes[idx]] || 'unclear skies'
+        })).filter(item => Number.isFinite(item.highF) && Number.isFinite(item.lowF));
+        return true;
+      } catch (e) {
+        return false;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    function liveContext() {
+      const now = new Date();
+      const parts = [
+        'Live system note — current local date/time: ' +
+        now.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '.'
+      ];
+      if (state.weather && (Date.now() - state.weather.fetchedAt) < 30 * 60 * 1000) {
+        parts.push('Current local weather: ' + state.weather.tempF + '°F, ' + state.weather.desc + '.');
+      }
+      if (state.forecast && state.forecast.length) {
+        const tomorrow = state.forecast[0];
+        const dayAfter = state.forecast[1];
+        if (tomorrow) parts.push('Tomorrow forecast: ' + tomorrow.label + ', high ' + tomorrow.highF + '°F, low ' + tomorrow.lowF + '°F.');
+        if (dayAfter) parts.push('Day after tomorrow forecast: ' + dayAfter.label + ', high ' + dayAfter.highF + '°F, low ' + dayAfter.lowF + '°F.');
+      }
+      parts.push('If the user asks for weather beyond the live snapshot, explain the best available forecast and be explicit when it is for tomorrow or the day after tomorrow.');
+      return { role: 'system', content: parts.join(' ') };
+    }
+
+    function isWeatherQuestion(text) {
+      return /\b(weather|forecast|rain|snow|temperature|temp|degree|degrees|hot|cold|warm|cool|humid|windy|outside|outside\s+like|feels?\s+like|precipitation|rain\s+chance|tomorrow|today|tonight|daily|weekly|week|this\s+week|next\s+week|weekend)\b/i.test(text);
+    }
+
+    function weatherReplyFor(text) {
+      const wantsTomorrow = /\btomorrow\b/i.test(text);
+      const wantsDaily = /\bdaily\b/i.test(text) || /\btoday\b/i.test(text) || /\btonight\b/i.test(text);
+      const wantsWeekly = /\bweekly\b/i.test(text) || /\bweek\b/i.test(text) || /\bthis\s+week\b/i.test(text) || /\bnext\s+week\b/i.test(text) || /\bweekend\b/i.test(text);
+      const current = state.weather;
+      const forecast = state.forecast || [];
+      if (!current && !forecast.length) return null;
+
+      const chunks = [];
+      if (wantsDaily && current) chunks.push('Today it is ' + current.tempF + '°F and ' + current.desc + '.');
+      if (wantsTomorrow) {
+        const tomorrow = forecast.find(d => d.label === 'Tomorrow') || forecast[1] || forecast[0];
+        if (tomorrow) chunks.push('Tomorrow will be ' + tomorrow.desc + ' with a high of ' + tomorrow.highF + '°F and a low of ' + tomorrow.lowF + '°F.');
+      }
+      if (wantsWeekly && forecast.length) {
+        const week = forecast.slice(0, 7).map(d => d.label + ': high ' + d.highF + '°F, low ' + d.lowF + '°F, ' + d.desc + '.');
+        chunks.push('This week looks like this: ' + week.join(' '));
+      }
+      if (!chunks.length && current) chunks.push('Right now it is ' + current.tempF + '°F and ' + current.desc + '.');
+      return chunks.length ? chunks.join(' ') : null;
+    }
+
+    // ---------- chat ----------
+    async function handleUser(text) {
+      addLine('you', text);
+      const travelTarget = resolveTravelTarget(text);
+      if (travelTarget) {
+        const phrase = 'Flying to ' + travelTarget.name + '.';
+        addLine('kyo', phrase);
+        speak(phrase);
+        showTravelScene(travelTarget);
+        return;
+      }
+      if (isWeatherQuestion(text)) {
+        if (!state.location) {
+          addLine('kyo', 'I need location permission to check weather. Tap allow, then ask me again.');
+          speak('I need location permission to check weather.');
+          initLocation();
+          return;
+        }
+        setMode('thinking');
+        const ok = await refreshWeather();
+        setMode('idle');
+        const weather = weatherReplyFor(text);
+        if (weather) {
+          addLine('kyo', weather);
+          speak(weather);
+          return;
+        }
+        addLine('kyo', ok ? 'I have the forecast, but I could not shape a clean answer.' : 'I still do not have enough weather data yet.');
+        speak(ok ? 'I have the forecast, but I could not shape a clean answer.' : 'I still do not have enough weather data yet.');
+        return;
+      }
+
+      if (!state.apiKey) {
+        addLine('kyo', 'I need an OpenRouter key first — tap the gear to open settings.');
+        speak('Add your key in settings.');
+        return;
+      }
+      state.messages.push({ role: 'user', content: text });
+      setMode('thinking');
+      try {
+        const raw = await callOpenRouter();
+        const { text: reply, action } = parseAction(raw);
+        state.messages.push({ role: 'assistant', content: raw });
+        addLine('kyo', reply || raw);
+        speak(reply || raw);
+        if (action) runAction(action);
+      } catch (e) {
+        setMode('idle');
+        const msg = (e && e.message) ? e.message : 'Something went wrong.';
+        addLine('kyo', 'Error: ' + msg);
+        speak('Something went wrong.');
+      }
+    }
+
+    async function callOpenRouter() {
+      const body = {
+        model: state.model,
+        messages: [state.messages[0], liveContext(), ...state.messages.slice(1)],
+        max_tokens: 220,
+        temperature: 0.6
+      };
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + state.apiKey,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': location.origin,
+          'X-Title': 'Winston'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(() => '');
+        throw new Error('OpenRouter ' + res.status + ': ' + t.slice(0, 160));
+      }
+      const data = await res.json();
+      const reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      return reply.trim() || '…';
+    }
+
+    // ---------- events ----------
+    els.mic.addEventListener('click', listen);
+    if (els.composer) {
+      els.composer.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitText(els.chatInput && els.chatInput.value);
+      });
+    }
+    els.settingsBtn.addEventListener('click', openSettings);
+    els.brand.addEventListener('click', openSettings);
+    els.scrim.addEventListener('click', closeSettings);
+    els.cancelBtn.addEventListener('click', closeSettings);
+    els.saveBtn.addEventListener('click', saveSettings);
+
+    // ---------- boot ----------
+    function timeGreeting() {
+      const h = new Date().getHours();
+      const part = h < 5 ? 'evening' : h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
+      const address = Math.random() < 0.5 ? 'Fedirino' : 'Sir';
+      return 'Good ' + part + ', ' + address + '. How can I help?';
+    }
+    addLine('kyo', timeGreeting());
+    initLocation();
+    els.modelTag.textContent = state.model;
+    els.verTag.textContent = 'Winston v' + APP_VERSION;
+    setMode('idle');
+    if (!state.apiKey) els.settingsBtn.classList.add('flag');
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

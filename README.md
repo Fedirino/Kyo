@@ -1,3 +1,3 @@
 # Winston
 
-Voice-first AI compa
+Voice-first AI companion. (Formerly "Kyo" — renamed for easier voice/wake-word recognition.)

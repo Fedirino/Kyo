@@ -11,4 +11,19 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
-  // network-first for the app
+  // network-first for the app shell so installed PWAs pick up new versions on launch;
+  // fall back to cache if offline. everything else stays cache-first.
+  const isShell = req.mode === 'navigate' || req.destination === 'document' ||
+    /\/(index\.html|manifest\.json|service-worker\.js)$/.test(new URL(req.url).pathname);
+  if (isShell) {
+    event.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(req).then(m => m || caches.match('/index.html')))
+    );
+    return;
+  }
+  event.respondWith(caches.match(req).then(match => match || fetch(req)));
+});
