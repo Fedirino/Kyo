@@ -1,4 +1,4 @@
-const CACHE = 'winston-v0.7.1';
+const CACHE = 'winston-v0.7.2';
 const ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/favicon.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
@@ -9,5 +9,6 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 self.addEventListener('fetch', event => {
-  event.respondWith(caches.match(event.request).then(match => match || fetch(event.request)));
-});
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  // network-first for the app
