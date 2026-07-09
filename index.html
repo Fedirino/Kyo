@@ -1138,7 +1138,7 @@
         const mins = daily.temperature_2m_min || [];
         const codes = daily.weather_code || [];
         state.forecast = dates.slice(0, 7).map((day, idx) => ({
-          label: idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : new Date(day + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }),
+          label: idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : new Date(day + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' }),
           highF: Math.round(maxs[idx]),
           lowF: Math.round(mins[idx]),
           desc: WEATHER_CODES[codes[idx]] || 'unclear skies'
@@ -1189,7 +1189,7 @@
         if (tomorrow) chunks.push('Tomorrow: ' + tomorrow.desc + ', high ' + tomorrow.highF + '°, low ' + tomorrow.lowF + '°.');
       }
       if (wantsWeekly && forecast.length) {
-        const week = forecast.slice(0, 4).map(d => d.label + ' ' + d.highF + '/' + d.lowF).join(', ');
+        const week = forecast.slice(0, 4).map(d => d.label + ': high ' + d.highF + '°, low ' + d.lowF + '°').join('. ');
         chunks.push('Week: ' + week + '.');
       }
       if (!chunks.length && current) chunks.push('Now: ' + current.tempF + '° and ' + current.desc + '.');
@@ -1199,6 +1199,7 @@
     function weatherSpeakFor(text) {
       return (text || '')
         .replace(/\b(\d+)°/g, '$1')
+        .replace(/high\s+(\d+)\s*,\s*low\s+(\d+)/gi, 'high $1, low $2')
         .replace(/\bdegrees?\b/gi, '')
         .replace(/\s+/g, ' ')
         .trim();
