@@ -835,6 +835,7 @@
       if (!('speechSynthesis' in window)) { setMode('idle'); handleReplyComplete(); return; }
       try { speechSynthesis.cancel(); } catch (e) {}
       const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'en-US';
       const voices = speechSynthesis.getVoices() || [];
       const v = pickEnglishVoice(voices);
       if (v) utt.voice = v;
@@ -1182,17 +1183,25 @@
       if (!current && !forecast.length) return null;
 
       const chunks = [];
-      if (wantsDaily && current) chunks.push('Today it is ' + current.tempF + '°F and ' + current.desc + '.');
+      if (wantsDaily && current) chunks.push('Today: ' + current.tempF + '° and ' + current.desc + '.');
       if (wantsTomorrow) {
         const tomorrow = forecast.find(d => d.label === 'Tomorrow') || forecast[1] || forecast[0];
-        if (tomorrow) chunks.push('Tomorrow will be ' + tomorrow.desc + ' with a high of ' + tomorrow.highF + '°F and a low of ' + tomorrow.lowF + '°F.');
+        if (tomorrow) chunks.push('Tomorrow: ' + tomorrow.desc + ', high ' + tomorrow.highF + '°, low ' + tomorrow.lowF + '°.');
       }
       if (wantsWeekly && forecast.length) {
-        const week = forecast.slice(0, 7).map(d => d.label + ': high ' + d.highF + '°F, low ' + d.lowF + '°F, ' + d.desc + '.');
-        chunks.push('This week looks like this: ' + week.join(' '));
+        const week = forecast.slice(0, 4).map(d => d.label + ' ' + d.highF + '/' + d.lowF).join(', ');
+        chunks.push('Week: ' + week + '.');
       }
-      if (!chunks.length && current) chunks.push('Right now it is ' + current.tempF + '°F and ' + current.desc + '.');
+      if (!chunks.length && current) chunks.push('Now: ' + current.tempF + '° and ' + current.desc + '.');
       return chunks.length ? chunks.join(' ') : null;
+    }
+
+    function weatherSpeakFor(text) {
+      return (text || '')
+        .replace(/\b(\d+)°/g, '$1')
+        .replace(/\bdegrees?\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
 
     // ---------- chat ----------
@@ -1219,7 +1228,7 @@
         const weather = weatherReplyFor(text);
         if (weather) {
           addLine('kyo', weather);
-          speak(weather);
+          speak(weatherSpeakFor(weather));
           return;
         }
         addLine('kyo', ok ? 'I have the forecast, but I could not shape a clean answer.' : 'I still do not have enough weather data yet.');
