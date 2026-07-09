@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.3
+- Phase 3 slice: added context mode chips (General, Voice, Weather, Travel, Brain), mode-aware status/help, typed/spoken mode routing, and a clickable modebar.
+- Bumped version/cache markers so installed PWAs pick up the new shell on launch.
+
 ## 0.7.2
 - Fixed settings sheet on installed mobile PWA: tapping the gear (or the wordmark) threw a TypeError because the "Continuous Mic Conversation" select was added to the sheet but never registered on the `els` element map, so `openSettings()` / `saveSettings()` crashed on `els.continuous.value` and the sheet never opened or saved. Registered `els.continuous` and settings works again on installed home-screen apps.
 - Service worker switched to network-first for the app shell (index.html, manifest.json, service-worker.js and navigation requests) with cache fallback for offline. Installed PWAs now pick up fixes on the next launch instead of being pinned to whatever cached version they were installed with.
