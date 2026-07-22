@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+- Added an authenticated Firebase Functions proxy for OpenRouter chat and ElevenLabs speech, keeping provider keys out of the browser.
+- Added Google sign-in with an exact allowed-email check, origin validation, request limits, model allowlisting, and bounded payloads.
+- Added a GitHub Actions secret-to-Firebase deployment path with a safe hosting-only fallback until all runtime secrets are configured.
+- Kept legacy browser-local keys temporarily available so the existing app continues working during migration.
+
 ## 0.8.0
 - Added Winston's first useful persistent core: natural-language capture for tasks, notes, and reminders, stored locally across launches.
 - Added Today and Inbox views with counts, completion, reopening, editing, deletion, and undo.

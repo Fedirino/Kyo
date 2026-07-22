@@ -172,6 +172,18 @@
     .sheet .row button.primary { background: linear-gradient(120deg, var(--amber-hot), var(--amber) 60%, var(--amber-deep));
       color: #2b1204; border-color: transparent; font-weight: 700; box-shadow: 0 8px 22px rgba(224,92,26,0.3); }
     .small { font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+    .cloud-card { margin: 13px 0 4px; padding: 13px; border-radius: 13px; border: 1px solid rgba(255,140,66,.16);
+      background: rgba(255,140,66,.045); }
+    .cloud-status { display: flex; align-items: center; gap: 9px; color: var(--ink); font-size: 12.5px; line-height: 1.4; }
+    .cloud-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: rgba(245,239,233,.2); }
+    .cloud-card.ready .cloud-dot { background: var(--amber); box-shadow: 0 0 11px rgba(255,140,66,.65); }
+    .cloud-card.signed-in .cloud-dot { background: #8de3ad; box-shadow: 0 0 11px rgba(90,220,140,.45); }
+    .cloud-card button { width: 100%; margin-top: 10px; padding: 9px 11px; border-radius: 9px; cursor: pointer;
+      border: 1px solid rgba(255,255,255,.1); background: transparent; color: var(--amber-hot); font-weight: 600; }
+    .cloud-card button[hidden] { display: none; }
+    .legacy-keys { margin-top: 11px; padding: 0 11px 11px; border: 1px solid rgba(255,255,255,.07); border-radius: 11px; }
+    .legacy-keys summary { padding: 11px 0 0; cursor: pointer; color: var(--dim); font: 500 9px/1.3 var(--mono);
+      letter-spacing: .14em; text-transform: uppercase; }
 
     .core-scrim, .editor-scrim { position: fixed; inset: 0; display: none; background: rgba(8,7,9,.72);
       backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); z-index: 24; }
@@ -402,8 +414,18 @@
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Winston settings">
     <h2>Settings</h2>
-    <label for="api-key">OpenRouter API Key</label>
-    <input id="api-key" type="password" placeholder="sk-or-..." autocomplete="off" />
+    <div class="cloud-card" id="cloud-card">
+      <div class="cloud-status"><span class="cloud-dot" aria-hidden="true"></span><span id="cloud-status-text">Checking secure cloud connection...</span></div>
+      <button type="button" id="cloud-auth-btn" hidden>Sign in with Google</button>
+    </div>
+    <details class="legacy-keys" id="legacy-keys">
+      <summary>Legacy local API keys</summary>
+      <label for="api-key">OpenRouter API Key</label>
+      <input id="api-key" type="password" placeholder="sk-or-..." autocomplete="off" />
+      <label for="eleven-key">ElevenLabs API Key</label>
+      <input id="eleven-key" type="password" placeholder="sk_..." autocomplete="off" />
+      <p class="small">Temporary fallback only. These values stay in this browser and are ignored after secure cloud sign-in.</p>
+    </details>
     <label for="model">Model</label>
     <select id="model">
       <option value="xiaomi/mimo-v2.5">xiaomi/mimo-v2.5 — cheapest, fast</option>
@@ -414,8 +436,6 @@
       <option value="deepseek/deepseek-reasoner">deepseek/deepseek-reasoner — deeper reasoning</option>
       <option value="openrouter/auto">openrouter/auto — let router choose</option>
     </select>
-    <label for="eleven-key">ElevenLabs API Key</label>
-    <input id="eleven-key" type="password" placeholder="sk_..." autocomplete="off" />
     <label for="eleven-voice">ElevenLabs Voice ID</label>
     <input id="eleven-voice" type="text" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" autocomplete="off" />
     <label for="voice">Browser Voice Fallback</label>
@@ -430,7 +450,7 @@
       <option value="0">Off — one turn at a time</option>
       <option value="1">On — reopen mic after each reply</option>
     </select>
-    <p class="small" id="ttskey-note">If ElevenLabs is configured, Winston speaks with it; otherwise your browser voice. Voice input uses the browser — on iOS Safari the mic may need a tap each time. Hands-free listens ambiently for "hey Winston" and captures whatever follows; continuous mic mode reopens the mic after Winston finishes speaking so you can keep going. Behavior varies by browser.</p>
+    <p class="small" id="ttskey-note">Secure cloud mode keeps provider keys on Firebase; otherwise Winston uses the legacy local fallback or your browser voice. Voice input uses the browser and varies by device.</p>
     <div class="row">
       <button id="cancel-btn">Cancel</button>
       <button id="save-btn" class="primary">Save</button>
@@ -446,8 +466,9 @@
       parseCoreQuery,
       queryCoreItems
     } from './src/features/capture/capture.js';
+    import { createWinstonCloud } from './src/services/cloud.js';
 
-    const APP_VERSION = '0.8.0';
+    const APP_VERSION = '0.8.1';
 
     // ---------- state ----------
     const state = {
@@ -475,6 +496,13 @@
     let activeCoreView = 'today';
     let activeCoreResults = null;
     let lastDeletedCoreItem = null;
+    const cloudState = { ready: false, initialized: false, user: null, error: '' };
+    const cloud = createWinstonCloud({
+      onState(next) {
+        Object.assign(cloudState, next);
+        updateCloudUI();
+      }
+    });
 
     const DEFAULT_HOME = { lat: 41.5376, lon: -72.8070 };
     const PRESET_LOCATIONS = {
@@ -529,6 +557,10 @@
       settingsBtn: document.getElementById('settings-btn'),
       scrim: document.getElementById('scrim'),
       sheet: document.getElementById('sheet'),
+      cloudCard: document.getElementById('cloud-card'),
+      cloudStatusText: document.getElementById('cloud-status-text'),
+      cloudAuthBtn: document.getElementById('cloud-auth-btn'),
+      legacyKeys: document.getElementById('legacy-keys'),
       apiKey: document.getElementById('api-key'),
       model: document.getElementById('model'),
       elevenKey: document.getElementById('eleven-key'),
@@ -944,6 +976,34 @@
     })();
 
     // ---------- settings ----------
+    function hasCloudSession() {
+      return !!(cloudState.ready && cloudState.user);
+    }
+
+    function updateCloudUI() {
+      if (!els.cloudCard) return;
+      const signedIn = hasCloudSession();
+      els.cloudCard.classList.toggle('ready', cloudState.ready);
+      els.cloudCard.classList.toggle('signed-in', signedIn);
+      els.legacyKeys.hidden = signedIn;
+      if (!cloudState.initialized) {
+        els.cloudStatusText.textContent = 'Checking secure cloud connection...';
+        els.cloudAuthBtn.hidden = true;
+      } else if (!cloudState.ready) {
+        els.cloudStatusText.textContent = 'Secure cloud is awaiting GitHub secrets. Local fallback remains active.';
+        els.cloudAuthBtn.hidden = true;
+      } else if (!cloudState.user) {
+        els.cloudStatusText.textContent = 'Secure cloud is ready. Sign in with the authorized Google account.';
+        els.cloudAuthBtn.textContent = 'Sign in with Google';
+        els.cloudAuthBtn.hidden = false;
+      } else {
+        els.cloudStatusText.textContent = 'Secure cloud connected as ' + cloudState.user.email + '.';
+        els.cloudAuthBtn.textContent = 'Sign out';
+        els.cloudAuthBtn.hidden = false;
+      }
+      els.settingsBtn.classList.toggle('flag', !signedIn && !state.apiKey);
+    }
+
     function openSettings() {
       els.apiKey.value = state.apiKey;
       els.model.value = state.model;
@@ -951,6 +1011,7 @@
       els.elevenVoice.value = state.elevenVoice;
       els.handsFree.value = state.handsFree ? '1' : '0';
       els.continuous.value = state.continuous ? '1' : '0';
+      updateCloudUI();
       populateVoices();
       els.scrim.classList.add('open');
       els.sheet.classList.add('open');
@@ -977,7 +1038,7 @@
       localStorage.setItem('kyo.handsFree', state.handsFree ? '1' : '0');
       localStorage.setItem('kyo.continuous', state.continuous ? '1' : '0');
       els.modelTag.textContent = state.model;
-      els.settingsBtn.classList.toggle('flag', !state.apiKey);
+      els.settingsBtn.classList.toggle('flag', !hasCloudSession() && !state.apiKey);
       closeSettings();
       if (state.handsFree && !handsFreeWasOn) {
         const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1138,13 +1199,18 @@
     async function speak(text) {
       const elevenKey = state.elevenKey.trim();
       const elevenVoice = state.elevenVoice.trim();
-      if (elevenKey && elevenVoice) {
+      let blob = null;
+      if (hasCloudSession() && elevenVoice) {
         try {
           setMode('speaking');
-          if (state.audio) {
-            try { state.audio.pause(); } catch (e) {}
-            state.audio = null;
-          }
+          blob = await cloud.speak({ text, voiceId: elevenVoice });
+        } catch (e) {
+          console.warn('Secure ElevenLabs TTS failed:', e);
+        }
+      }
+      if (!blob && !hasCloudSession() && elevenKey && elevenVoice) {
+        try {
+          setMode('speaking');
           const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + encodeURIComponent(elevenVoice), {
             method: 'POST',
             headers: {
@@ -1159,7 +1225,17 @@
             })
           });
           if (!res.ok) throw new Error('ElevenLabs ' + res.status);
-          const blob = await res.blob();
+          blob = await res.blob();
+        } catch (e) {
+          console.warn('Legacy ElevenLabs TTS failed:', e);
+        }
+      }
+      if (blob) {
+        try {
+          if (state.audio) {
+            try { state.audio.pause(); } catch (e) {}
+            state.audio = null;
+          }
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
           state.audio = audio;
@@ -1177,7 +1253,7 @@
           await audio.play();
           return;
         } catch (e) {
-          console.warn('ElevenLabs TTS failed, falling back to browser voice:', e);
+          console.warn('Audio playback failed, falling back to browser voice:', e);
         }
       }
       fallbackSpeak(text);
@@ -1609,9 +1685,12 @@
         return;
       }
 
-      if (!state.apiKey) {
-        addLine('kyo', 'I need an OpenRouter key first — tap the gear to open settings.');
-        speak('Add your key in settings.');
+      if (!hasCloudSession() && !state.apiKey) {
+        const cloudReady = cloudState.ready;
+        addLine('kyo', cloudReady
+          ? 'Secure cloud is ready. Tap the gear and sign in with Google first.'
+          : 'AI chat is waiting for secure cloud setup. You can still use tasks, notes, reminders, weather, and the temporary local-key fallback in Settings.');
+        speak(cloudReady ? 'Sign in with Google in settings.' : 'Secure AI chat is not configured yet.');
         return;
       }
       state.messages.push({ role: 'user', content: text });
@@ -1638,6 +1717,10 @@
         max_tokens: 220,
         temperature: 0.6
       };
+      if (hasCloudSession()) {
+        const data = await cloud.chat(body);
+        return String(data.reply || '').trim() || '…';
+      }
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -1670,6 +1753,18 @@
     els.scrim.addEventListener('click', closeSettings);
     els.cancelBtn.addEventListener('click', closeSettings);
     els.saveBtn.addEventListener('click', saveSettings);
+    els.cloudAuthBtn.addEventListener('click', async () => {
+      els.cloudAuthBtn.disabled = true;
+      try {
+        if (hasCloudSession()) await cloud.signOut();
+        else await cloud.signIn();
+      } catch (error) {
+        showToast((error && error.message) || 'Google sign-in failed');
+      } finally {
+        els.cloudAuthBtn.disabled = false;
+        updateCloudUI();
+      }
+    });
     els.todayBtn.addEventListener('click', () => openCorePanel('today'));
     els.inboxBtn.addEventListener('click', () => openCorePanel('inbox'));
     els.coreClose.addEventListener('click', closeCorePanel);
@@ -1783,7 +1878,11 @@
     els.modelTag.textContent = state.model;
     els.verTag.textContent = 'Winston v' + APP_VERSION;
     setMode('idle');
-    if (!state.apiKey) els.settingsBtn.classList.add('flag');
+    updateCloudUI();
+    cloud.init().catch((error) => {
+      console.warn('Secure cloud initialization failed:', error);
+      updateCloudUI();
+    });
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

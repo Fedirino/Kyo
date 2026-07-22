@@ -17,7 +17,7 @@ jobs:
         run: |
           set -euo pipefail
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
-          output="$(npx firebase-tools@latest deploy --only hosting --project kyo-os --non-interactive --json 2>&1)" || rc=$?
+          output="$(npx firebase-tools@latest hosting:channel:deploy "pr-${{ github.event.number }}" --expires 7d --config firebase.hosting-only.json --project kyo-os --non-interactive --json 2>&1)" || rc=$?
           rc="${rc:-0}"
           printf '%s\n' "$output"
           if [ "$rc" -ne 0 ]; then

@@ -1,8 +1,12 @@
 name: Deploy to Firebase Hosting on merge
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+concurrency:
+  group: firebase-production
+  cancel-in-progress: true
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -14,16 +18,50 @@ jobs:
           cat > "$RUNNER_TEMP/firebase-sa.json" <<'JSON'
           ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KYO_OS }}
           JSON
-      - name: Deploy to Firebase Hosting
+      - name: Configure secure runtime secrets
+        id: runtime
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          WINSTON_ALLOWED_EMAIL: ${{ secrets.WINSTON_ALLOWED_EMAIL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$OPENROUTER_API_KEY" ] || [ -z "$ELEVENLABS_API_KEY" ] || [ -z "$WINSTON_ALLOWED_EMAIL" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secure runtime secrets are incomplete; deploying Hosting only."
+            exit 0
+          fi
+          if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Using the existing Firebase runtime secrets. Manually run this workflow after rotating GitHub secrets."
+            exit 0
+          fi
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          printf '%s' "$OPENROUTER_API_KEY" | npx firebase-tools@latest functions:secrets:set OPENROUTER_API_KEY --data-file=- --project kyo-os --non-interactive
+          printf '%s' "$ELEVENLABS_API_KEY" | npx firebase-tools@latest functions:secrets:set ELEVENLABS_API_KEY --data-file=- --project kyo-os --non-interactive
+          printf '%s' "$WINSTON_ALLOWED_EMAIL" | npx firebase-tools@latest functions:secrets:set WINSTON_ALLOWED_EMAIL --data-file=- --project kyo-os --non-interactive
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+      - name: Deploy to Firebase
+        shell: bash
+        env:
+          RUNTIME_CONFIGURED: ${{ steps.runtime.outputs.configured }}
         run: |
           set -euo pipefail
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
-          output="$(npx firebase-tools@latest deploy --only hosting --project kyo-os --non-interactive --json 2>&1)" || rc=$?
+          if [ "$RUNTIME_CONFIGURED" = "true" ]; then
+            config="firebase.json"
+            targets="hosting,functions"
+          else
+            config="firebase.hosting-only.json"
+            targets="hosting"
+          fi
+          output="$(npx firebase-tools@latest deploy --only "$targets" --config "$config" --project kyo-os --non-interactive --json 2>&1)" || rc=$?
           rc="${rc:-0}"
           printf '%s\n' "$output"
           if [ "$rc" -ne 0 ]; then
-            if printf '%s' "$output" | grep -q "current active version"; then
+            if [ "$targets" = "hosting" ] && printf '%s' "$output" | grep -q "current active version"; then
               echo "Hosting version already active; treating as success."
               exit 0
             fi
