@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0
+- Added Winston's first useful persistent core: natural-language capture for tasks, notes, and reminders, stored locally across launches.
+- Added Today and Inbox views with counts, completion, reopening, editing, deletion, and undo.
+- Added saved-item confirmation cards with immediate Edit and Undo actions.
+- Added local recall and action commands such as "What do I need to do today?", "Show my PDP reminders", and "Mark the strawberry review complete."
+- Core capture and recall work without an OpenRouter key; general AI chat continues to use the existing OpenRouter setting.
+- Fixed broad weather routing so ordinary questions containing "today" or "week" no longer become weather requests.
+- Fixed live forecast context using Today's forecast as Tomorrow, and tightened travel preset routing to explicit commands.
+- Moved the new capture model and parser into a tested ES module and added Node's built-in test runner.
+
 ## 0.7.4
 - Reverted the experimental mode chips and mode-routing UI; Winston is back to a fast plain chat shell.
 - Kept the continuous mic conversation flow so the mic can reopen after replies for cleaner back-and-forth.
