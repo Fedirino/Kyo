@@ -47,12 +47,6 @@ jobs:
         if: steps.runtime.outputs.configured == 'true'
         shell: bash
         run: npm ci --prefix functions --omit=dev --ignore-scripts
-      - name: Configure function artifact cleanup
-        if: steps.runtime.outputs.configured == 'true'
-        shell: bash
-        run: |
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
-          npx firebase-tools@latest functions:artifacts:setpolicy --location us-central1 --days 7 --force --project kyo-os --non-interactive
       - name: Deploy to Firebase
         shell: bash
         env:
@@ -67,7 +61,7 @@ jobs:
             config="firebase.hosting-only.json"
             targets="hosting"
           fi
-          output="$(npx firebase-tools@latest deploy --only "$targets" --config "$config" --project kyo-os --non-interactive --json 2>&1)" || rc=$?
+          output="$(npx firebase-tools@latest deploy --only "$targets" --config "$config" --project kyo-os --non-interactive --force --json 2>&1)" || rc=$?
           rc="${rc:-0}"
           printf '%s\n' "$output"
           if [ "$rc" -ne 0 ]; then
